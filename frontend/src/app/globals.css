@@ -1,0 +1,283 @@
+:root {
+  --ink: #1a1a1a;
+  --muted: #5c5c5c;
+  --line: #d4d4d4;
+  --ground: #f4f4f2;
+  --paper: #ffffff;
+  --accent: #1f4f82;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+.masthead {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+  padding: 1.5rem 2rem;
+}
+
+.masthead h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.35rem;
+}
+
+.masthead p {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--muted);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(20rem, 26rem) 1fr;
+  align-items: start;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.column {
+  min-width: 0;
+}
+
+/* Form */
+
+.form fieldset {
+  margin: 0 0 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.form legend {
+  padding: 0 0.4rem;
+  font-weight: 600;
+}
+
+.form label {
+  display: block;
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.form label.choice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+.form input,
+.form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.45rem 0.55rem;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.form input.years {
+  width: 6rem;
+}
+
+.form label.choice input {
+  width: auto;
+}
+
+.form textarea {
+  resize: vertical;
+}
+
+.form input:focus-visible,
+.form textarea:focus-visible,
+.download:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.hint {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.download {
+  width: 100%;
+  border: none;
+  border-radius: 3px;
+  background: var(--accent);
+  padding: 0.7rem;
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.download:hover {
+  background: #163a61;
+}
+
+/* Document */
+
+.document {
+  margin: 0 auto;
+  max-width: 48rem;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  padding: 3rem 3.5rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.95rem;
+}
+
+.document h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.document h2 {
+  margin: 2.5rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 0.3rem;
+  font-size: 1.1rem;
+}
+
+.document h3 {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+}
+
+.document .preamble {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.document .field {
+  margin-bottom: 1.25rem;
+}
+
+.document .field p:not(.hint) {
+  margin: 0;
+}
+
+.document a {
+  color: var(--accent);
+}
+
+.signatures {
+  width: 100%;
+  margin: 1rem 0 0;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.signatures th,
+.signatures td {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.signatures thead th {
+  background: var(--ground);
+}
+
+.signatures tbody th {
+  width: 11rem;
+  font-weight: 600;
+}
+
+.signatures th .hint {
+  display: block;
+  font-weight: 400;
+}
+
+.signatures tbody tr:first-child td,
+.signatures tbody tr:last-child td {
+  height: 2.75rem;
+}
+
+.clauses {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.clauses li {
+  margin-bottom: 1rem;
+  text-align: justify;
+}
+
+.attribution {
+  margin-top: 2rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Print: the agreement alone, without the page around it */
+
+@page {
+  margin: 20mm;
+}
+
+@media print {
+  body {
+    background: var(--paper);
+  }
+
+  .masthead,
+  .form-column {
+    display: none;
+  }
+
+  .columns {
+    display: block;
+    padding: 0;
+  }
+
+  .document {
+    max-width: none;
+    border: none;
+    padding: 0;
+  }
+
+  .document h2 {
+    break-after: avoid;
+  }
+
+  .clauses li,
+  .signatures {
+    break-inside: avoid;
+  }
+}
+
+@media (max-width: 60rem) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+
+  .document {
+    padding: 2rem 1.5rem;
+  }
+}
