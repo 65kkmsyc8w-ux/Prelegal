@@ -31,6 +31,14 @@ export const formatDate = (isoDate: string): string => {
 export const formatYears = (years: number): string =>
   years === 1 ? "1 year" : `${years} years`;
 
+/**
+ * A number input reports an empty box as 0 and accepts a typed negative, and
+ * neither is a term anyone can agree to. Both read as unfilled, like any other
+ * value the user has yet to give.
+ */
+export const formatTermYears = (years: number): string =>
+  years >= 1 ? formatYears(years) : "[Years]";
+
 /** Returns the value, or the placeholder that stands in for it while it is blank. */
 export const orPlaceholder = (value: string, placeholder: string): string =>
   value.trim() === "" ? `[${placeholder}]` : value;
@@ -50,11 +58,11 @@ export const documentValues = (details: NdaDetails): DocumentValues => ({
   effectiveDate: orPlaceholder(formatDate(details.effectiveDate), "Effective Date"),
   mndaTerm:
     details.termKind === "expires"
-      ? `Expires ${formatYears(details.termYears)} from the Effective Date.`
+      ? `Expires ${formatTermYears(details.termYears)} from the Effective Date.`
       : "Continues until terminated in accordance with the terms of this MNDA.",
   termOfConfidentiality:
     details.confidentialityKind === "years"
-      ? `${formatYears(details.confidentialityYears)} from the Effective Date, but in the case of trade secrets until the Confidential Information is no longer considered a trade secret under applicable laws.`
+      ? `${formatTermYears(details.confidentialityYears)} from the Effective Date, but in the case of trade secrets until the Confidential Information is no longer considered a trade secret under applicable laws.`
       : "In perpetuity.",
   governingLaw: orPlaceholder(details.governingLaw, "Governing Law"),
   jurisdiction: orPlaceholder(details.jurisdiction, "Jurisdiction"),

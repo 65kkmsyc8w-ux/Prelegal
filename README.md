@@ -13,8 +13,9 @@ The Mutual NDA creator is the first drafting tool to land. Tracking issue:
 ## Mutual NDA creator
 
 `frontend/` holds a Next.js app that builds a Common Paper Mutual NDA. Fill in
-the cover page and the agreement, cover page and Standard Terms together,
-renders alongside the form. Download opens the browser print dialog; choose
+the cover page and the agreement builds as you type, the cover page and the
+Standard Terms together, alongside the form. Anything left blank shows as a
+placeholder in square brackets. Download opens the browser print dialog; choose
 Save as PDF to keep a copy.
 
 It is a static site: there is no server and nothing is stored or sent anywhere.
@@ -22,11 +23,23 @@ It is a static site: there is no server and nothing is stored or sent anywhere.
 ```bash
 cd frontend
 npm install
-npm run dev     # http://localhost:3000
-npm test        # unit tests
+npm run dev        # http://localhost:3000
+npm run build      # static export into frontend/out
 npm run lint
-npm run build   # static export into frontend/out
 ```
+
+## Tests
+
+```bash
+cd frontend
+npm test           # unit and component tests
+npm run test:e2e   # end to end, starts its own dev server
+```
+
+`npm run test:e2e` needs the browser once: `npx playwright install chromium`.
+
+[docs/manual-tests.md](docs/manual-tests.md) lists what the suites cannot
+reach, chiefly the browser's own print dialog and the saved PDF.
 
 ## Templates
 
