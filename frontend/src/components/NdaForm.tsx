@@ -6,6 +6,26 @@ import type { NdaDetails, Party } from "@/lib/nda";
 
 type PartyKey = "partyOne" | "partyTwo";
 
+interface YearsFieldProps {
+  id: string;
+  value: number;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
+const YearsField = ({ id, value, onChange }: YearsFieldProps) => (
+  <>
+    <label htmlFor={id}>Years</label>
+    <input
+      id={id}
+      type="number"
+      min={1}
+      className="years"
+      value={value}
+      onChange={onChange}
+    />
+  </>
+);
+
 interface PartyFieldsProps {
   id: string;
   legend: string;
@@ -115,17 +135,11 @@ export const NdaForm = ({ details, onChange, onDownload }: NdaFormProps) => {
         </label>
 
         {details.termKind === "expires" && (
-          <>
-            <label htmlFor="term-years">Years</label>
-            <input
-              id="term-years"
-              type="number"
-              min={1}
-              className="years"
-              value={details.termYears}
-              onChange={setYears("termYears")}
-            />
-          </>
+          <YearsField
+            id="term-years"
+            value={details.termYears}
+            onChange={setYears("termYears")}
+          />
         )}
       </fieldset>
 
@@ -158,17 +172,11 @@ export const NdaForm = ({ details, onChange, onDownload }: NdaFormProps) => {
         </label>
 
         {details.confidentialityKind === "years" && (
-          <>
-            <label htmlFor="confidentiality-years">Years</label>
-            <input
-              id="confidentiality-years"
-              type="number"
-              min={1}
-              className="years"
-              value={details.confidentialityYears}
-              onChange={setYears("confidentialityYears")}
-            />
-          </>
+          <YearsField
+            id="confidentiality-years"
+            value={details.confidentialityYears}
+            onChange={setYears("confidentialityYears")}
+          />
         )}
       </fieldset>
 

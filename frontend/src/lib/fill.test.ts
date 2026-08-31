@@ -5,6 +5,7 @@ import {
   documentValues,
   fillTemplate,
   formatDate,
+  formatTermYears,
   formatYears,
   orPlaceholder,
 } from "@/lib/fill";
@@ -35,6 +36,21 @@ describe("formatYears", () => {
 
   it("uses the plural for more than one", () => {
     expect(formatYears(3)).toBe("3 years");
+  });
+});
+
+describe("formatTermYears", () => {
+  it("states a term of a year or more", () => {
+    expect(formatTermYears(1)).toBe("1 year");
+    expect(formatTermYears(4)).toBe("4 years");
+  });
+
+  it("reads as unfilled when the years box has been cleared", () => {
+    expect(formatTermYears(0)).toBe("[Years]");
+  });
+
+  it("reads as unfilled rather than agreeing to a negative term", () => {
+    expect(formatTermYears(-3)).toBe("[Years]");
   });
 });
 
@@ -85,6 +101,16 @@ describe("documentValues", () => {
     expect(values.termOfConfidentiality).toBe("In perpetuity.");
   });
 
+  it("never states a term of zero years in the agreement", () => {
+    const values = documentValues({
+      ...details,
+      termYears: 0,
+      confidentialityYears: 0,
+    });
+    expect(values.mndaTerm).toBe("Expires [Years] from the Effective Date.");
+    expect(values.termOfConfidentiality).toContain("[Years] from the Effective Date");
+  });
+
   it("says so when no modifications were made", () => {
     expect(documentValues(details).modifications).toBe("None.");
   });
@@ -113,6 +139,21 @@ describe("fillTemplate", () => {
     expect(filled).toContain("the laws of the State of Delaware");
     expect(filled).toContain("courts located in New Castle, DE");
     expect(filled).not.toContain("{");
+  });
+
+  it("keeps the cover page terms the clause refers back to", () => {
+    const clause = STANDARD_TERMS.find(
+      (candidate) => candidate.heading === "Governing Law and Jurisdiction",
+    );
+    const filled = fillTemplate(clause!.body, values);
+
+    // The second mention of each is a reference back to the Cover Page term,
+    // not a second statement of the value: "provisions of such Delaware" and
+    // "jurisdiction of such New Castle, DE" are not English.
+    expect(filled).toContain("conflict of laws provisions of such Governing Law");
+    expect(filled).toContain("exclusive jurisdiction of such Jurisdiction");
+    expect(filled).not.toContain("provisions of such Delaware");
+    expect(filled).not.toContain("jurisdiction of such New Castle, DE");
   });
 
   it("leaves text alone when it holds no tokens", () => {

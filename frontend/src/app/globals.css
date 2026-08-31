@@ -5,6 +5,7 @@
   --ground: #f4f4f2;
   --paper: #ffffff;
   --accent: #1f4f82;
+  --accent-strong: #163a61;
 }
 
 * {
@@ -125,7 +126,7 @@ body {
 }
 
 .download:hover {
-  background: #163a61;
+  background: var(--accent-strong);
 }
 
 /* Document */
@@ -267,7 +268,8 @@ body {
   }
 
   .clauses li,
-  .signatures {
+  .signatures,
+  .document .field {
     break-inside: avoid;
   }
 }

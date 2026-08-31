@@ -5,9 +5,23 @@ export interface Clause {
 
 /**
  * Common Paper Mutual NDA Standard Terms Version 1.0, transcribed from
- * templates/mutual-nda.md. The cover page links in the source become {tokens}
- * where the clause states a cover page value, and stay as the defined term
- * where the clause only refers back to the cover page.
+ * templates/mutual-nda.md.
+ *
+ * The source wraps every cover page reference in <span class="coverpage_link">,
+ * which its own HTML renders as a link showing the label, not the value. A
+ * printed agreement has nothing to link to, so each one becomes whichever of
+ * the two reads correctly on paper:
+ *
+ * - A {token} where the clause states the value. Clause 9's "the laws of the
+ *   State of {governingLaw}" and "courts located in {jurisdiction}".
+ * - The capitalized cover page term where the clause refers back to it.
+ *   Clause 5's "commences on the Effective Date", and the second mention in
+ *   each half of clause 9, because "provisions of such Delaware" and
+ *   "jurisdiction of such New Castle, DE" are not English. Clause 1 provides
+ *   for this: capitalized terms take their meaning from the Cover Page.
+ *
+ * Both readings are pinned by tests. Substituting every link, or none, breaks
+ * one clause or the other.
  */
 export const STANDARD_TERMS: Clause[] = [
   {
