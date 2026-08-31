@@ -11,7 +11,14 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     trace: "on-first-retry",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // The print stylesheet is the least portable part of this app, so it is
+  // exercised on all three engines. page.pdf is Chromium only; the test that
+  // needs it skips elsewhere.
+  projects: [
+    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", use: { ...devices["Desktop Safari"] } },
+  ],
   webServer: {
     command: `npx next dev --port ${PORT}`,
     url: `http://localhost:${PORT}`,

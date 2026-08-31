@@ -92,14 +92,20 @@ test.describe("printing", () => {
     await expect(agreement).toContainText("free to use under CC BY 4.0");
   });
 
-  test("writes a PDF holding the whole agreement", async ({ page }, testInfo) => {
+  test("writes a PDF holding the whole agreement", async ({
+    page,
+    browserName,
+  }, testInfo) => {
+    test.skip(browserName !== "chromium", "page.pdf is Chromium only");
+
     const pdf = await page.pdf({ format: "A4" });
-    const path = testInfo.outputPath("mutual-nda.pdf");
-    await testInfo.attach("mutual-nda.pdf", { body: pdf, contentType: "application/pdf" });
+    await testInfo.attach("mutual-nda.pdf", {
+      body: pdf,
+      contentType: "application/pdf",
+    });
 
     expect(pdf.subarray(0, 5).toString()).toBe("%PDF-");
     expect(pdf.byteLength).toBeGreaterThan(10_000);
-    expect(path).toBeTruthy();
   });
 });
 

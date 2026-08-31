@@ -1,9 +1,10 @@
 # Manual tests
 
 What the automated suites cannot reach. `npm test` and `npm run test:e2e` cover
-the fill logic, the components, the page, the print stylesheet under emulated
-print media, and a headless PDF. Everything below needs a real browser, a real
-print dialog or a human eye.
+the fill logic, the components, the page, and the print stylesheet under
+emulated print media in Chromium, Firefox and WebKit, plus a headless PDF in
+Chromium. Everything below needs a real print dialog, real paper or a human
+eye.
 
 Run `npm run dev` in `frontend/` and work through the list. Record the browser
 and version against each run.
@@ -12,7 +13,7 @@ and version against each run.
 
 The E2E suite emulates print media and generates a PDF through the automation
 API. Neither goes through the browser's own print dialog, which is what a user
-actually gets.
+actually gets, and neither says anything about the margins the dialog applies.
 
 1. Fill the form completely. Press Download PDF.
 2. The browser print dialog opens. The preview shows the agreement alone: no
@@ -26,8 +27,9 @@ actually gets.
 6. Repeat with the browser's default margins, then with margins set to None.
    Nothing is clipped at either setting.
 
-Do this in Chrome, Firefox and Safari. Print stylesheets are the least
-consistent part of CSS and the E2E run only exercises Chromium.
+Do this in Chrome, Firefox and Safari. The E2E suite now checks the print
+stylesheet on all three engines, so what remains here is the dialog itself and
+the pagination of the file it writes, which only a real print pipeline decides.
 
 ## Printing to paper
 
