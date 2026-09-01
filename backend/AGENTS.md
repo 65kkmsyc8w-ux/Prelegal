@@ -12,14 +12,35 @@ routers -> ai -> domain -> core
 ```
 
 `core` holds config, the engine, the session cookie and the auth dependency.
-`domain` holds the models, the schemas, the mutations and the document shape.
+`domain` holds the models, the schemas, the mutations and the document shapes.
 `ai` holds the provider client and the chat prompt. `routers` holds one module
 per resource, each mounted under `/api`.
 
-`domain/nda.py` holds both shapes of the cover page and the merge, and knows
-nothing about the assistant. That is what keeps the arrow pointing one way: the
+`domain/fields.py` holds the field vocabulary, the models built from it and the
+merge. `domain/documents.py` loads the eleven declarations. Neither knows
+anything about the assistant. That is what keeps the arrow pointing one way: the
 merge is document logic, so `ai` depends on it rather than owning it, and
 `domain` never imports from `ai`.
+
+## Where a document comes from
+
+A document type is declared in two files under `documents/`, at the repository
+root, both copied into the image:
+
+- `<slug>.spec.json`, written by hand. What the cover page asks for, how each
+  field reads once filled, and what the assistant should be told each field
+  means.
+- `<slug>.clauses.json`, generated from `templates/<slug>.md` by
+  `frontend/scripts/generate-clauses.mjs`.
+
+Only the Mutual NDA ships a cover page, in this repository or upstream at
+Common Paper. The other ten name the values they need through
+`<span class="..._link">` references in their own prose, and each spec's field
+list is derived from those. Nothing was invented for them, and nothing was
+fetched: the field list is what that agreement's own text demands.
+
+Adding a twelfth document is one spec file, one template and a generator run.
+There is no Python to write.
 
 ## Invariants
 
@@ -41,12 +62,32 @@ Each has a test behind it.
 - **`merge_fields` reads None as "the message did not mention it"**, never as
   "clear it". A turn that says nothing about a field leaves it standing. The
   model is asked to leave untouched fields null but often echoes them back
-  instead, and both answers have to come out the same.
+  instead, and both answers have to come out the same. An empty string counts as
+  not mentioned too. A field whose value is an object merges a level down, so one
+  detail of a party arriving does not wipe the rest of that party.
+- **A slug the assistant did not get from the catalog names nothing.** It is
+  read the same way as naming no document at all, so an invented document costs
+  one more turn rather than a 500.
+- **Changing document mid-conversation empties the cover page.** Field keys
+  belong to the document they were gathered for, so none of them carry over.
+- **The wire carries the declaration, not the terms.** `DocumentOut` leaves
+  `clauses` out: the browser has them already, generated from the same
+  templates, and the longer agreements would put several thousand words on the
+  wire every turn.
 - **The chat stores nothing.** The browser holds the transcript and the fields
   and sends both, so no transaction is open across the provider call.
-- **`test_chat_prompt.py` pins the eleven clause headings.** Nothing reads
-  `templates/mutual-nda.md` at runtime and it is not copied into the image, so
-  that test is what keeps the transcription in `ai/chat.py` honest.
+- **`test_chat_prompt.py` pins every clause heading of every document.**
+  Nothing reads `templates/*.md` at runtime and they are not copied into the
+  image, so that test is what keeps the generated clauses honest on this side.
+  `frontend/src/content/generated/generated.test.ts` is what keeps them honest
+  against the templates themselves.
+
+There is no longer a test pinning the cover page field names against the
+frontend. There was one, because `domain/nda.py` was transcribed by hand from
+`frontend/src/lib/nda.ts` and the two could drift. Neither file exists now: the
+browser is sent the same declaration the backend loaded, so the two cannot
+disagree about a field name. `test_documents.py` checks the declarations
+themselves instead.
 
 ## Deliberately absent
 

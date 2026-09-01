@@ -20,8 +20,8 @@ test("opens the platform once a name is given", async ({ page }) => {
   await signIn(page, "e2e-arrival");
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("heading", { name: "Mutual NDA creator" })).toBeVisible();
-  await expect(page.getByRole("article")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agreement drafter" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Chat" })).toBeVisible();
 });
 
 test("keeps the session across a reload", async ({ page }) => {
@@ -30,7 +30,7 @@ test("keeps the session across a reload", async ({ page }) => {
   await page.reload();
 
   await expect(page.getByText("Signed in as e2e-returning")).toBeVisible();
-  await expect(page.getByRole("article")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Chat" })).toBeVisible();
 });
 
 test("closes the platform again on sign out", async ({ page }) => {
@@ -53,5 +53,5 @@ test("returns to the same account when the same name signs in again", async ({
 
   await signIn(page, "e2e-repeat");
 
-  await expect(page.getByRole("article")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Chat" })).toBeVisible();
 });

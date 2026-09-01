@@ -77,7 +77,11 @@ def test_the_browser_is_sent_the_shape_it_has_to_render(signed_in_client, ai_tur
     spec = draft(signed_in_client, "An SLA please.", None).json()["documentSpec"]
 
     assert [field["key"] for field in spec["fields"]][:2] == ["provider", "customer"]
-    assert spec["clauses"][0]["heading"] != ""
+    assert spec["title"] == "Service Level Agreement"
+    # The terms are left out on purpose: the browser has them already, generated
+    # from the same templates, and the longer agreements run to thousands of
+    # words that would otherwise go over the wire every turn.
+    assert "clauses" not in spec
 
 
 def test_a_reply_carries_what_the_assistant_found(signed_in_client, ai_turn):

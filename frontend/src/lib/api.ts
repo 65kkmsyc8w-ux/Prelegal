@@ -1,4 +1,4 @@
-import type { NdaDetails } from "@/lib/nda";
+import type { DocumentSpec, Fields } from "@/lib/documents";
 
 export interface ApiUser {
   id: number;
@@ -53,7 +53,11 @@ export interface ChatEntry {
 
 export interface ChatReply {
   reply: string;
-  fields: NdaDetails;
+  /** The agreement settled on, or null while the assistant is still working
+   * out what is wanted. */
+  document: string | null;
+  documentSpec: DocumentSpec | null;
+  fields: Fields;
 }
 
 export const getGreeting = () => request<{ reply: string }>("/chat/greeting");
@@ -61,9 +65,10 @@ export const getGreeting = () => request<{ reply: string }>("/chat/greeting");
 export const sendChatMessage = (
   message: string,
   history: ChatEntry[],
-  fields: NdaDetails,
+  document: string | null,
+  fields: Fields,
 ) =>
   request<ChatReply>("/chat/message", {
     method: "POST",
-    body: JSON.stringify({ message, history, fields }),
+    body: JSON.stringify({ message, history, document, fields }),
   });

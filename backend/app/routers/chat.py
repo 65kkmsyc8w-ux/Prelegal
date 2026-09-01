@@ -5,7 +5,12 @@ from app.core.deps import UserDep
 from app.domain import documents
 from app.domain.documents import DocumentSpec
 from app.domain.fields import details_model, merge_fields
-from app.domain.schemas import ChatReply, ChatRequest, GreetingReply
+from app.domain.schemas import (
+    ChatReply,
+    ChatRequest,
+    DocumentOut,
+    GreetingReply,
+)
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 
@@ -52,14 +57,14 @@ def post_message(payload: ChatRequest, _user: UserDep) -> ChatReply:
         return ChatReply(
             reply=turn.reply,
             document=chosen.slug,
-            documentSpec=chosen,
+            documentSpec=DocumentOut.of(chosen),
             fields=_blank(chosen),
         )
 
     return ChatReply(
         reply=turn.reply,
         document=spec.slug,
-        documentSpec=spec,
+        documentSpec=DocumentOut.of(spec),
         fields=merge_fields(
             spec.fields, _held(spec, payload.fields), turn.fields.model_dump()
         ),

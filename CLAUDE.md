@@ -8,9 +8,9 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The Mutual NDA is the one document type built so far, drafted through AI chat.
-Sign-in is a display name and nothing else, and nothing is saved: the other ten
-types are PL-7, real authentication and saved documents are PL-8.
+All eleven agreements can be drafted through AI chat. Sign-in is a display name
+and nothing else, and nothing is saved: real authentication and saved documents
+are PL-8.
 
 ## Development process
 
@@ -78,9 +78,8 @@ up. The reasoning sits in `globals.css` beside the tokens.
 
 ## Implementation Status
 
-Jira PL-2, PL-3, PL-5 and PL-6 are merged to `main`. PL-7 and PL-8 are not
-started, so there is still only one document type, no saved documents and no
-real authentication.
+Jira PL-2, PL-3, PL-5, PL-6 and PL-7 are done. PL-8 is not started, so there are
+no saved documents and no real authentication.
 
 ### Completed (PL-2)
 
@@ -124,16 +123,31 @@ real authentication.
 - The container now needs `OPENROUTER_API_KEY` to start, and the start scripts
   pass `.env` in and refuse to build without it.
 
+### Completed (PL-7)
+
+- All eleven Common Paper agreements can be drafted, not just the Mutual NDA.
+- The document type is settled by talking. Until one is, the assistant is at a
+  front desk with the catalog in front of it; asked for something we cannot
+  draft, it says so and offers the nearest thing we can.
+- Each document is declared in `documents/<slug>.spec.json`. Only the Mutual NDA
+  ships a cover page, here or upstream, so the other ten have their field lists
+  derived from the values their own prose references.
+- `documents/<slug>.clauses.json` and `frontend/src/content/generated/<slug>.ts`
+  are generated from `templates/<slug>.md` by
+  `frontend/scripts/generate-clauses.mjs` (`npm run generate`), and committed.
+- One renderer serves all eleven, driven by the declaration the server sends.
+
 ### Not built yet
 
-- The other ten document types (PL-7), real authentication and saved documents
-  (PL-8).
+- Real authentication and saved documents (PL-8).
 
 ### Current API endpoints
 
 - `GET /api/health` - health check, used by the start scripts
 - `GET /api/chat/greeting` - the assistant's opening line, no provider call
-- `POST /api/chat/message` - one turn of the conversation, 502 if the model fails
+- `POST /api/chat/message` - one turn of the conversation, 502 if the model
+  fails. Carries `document` and `fields`; answers with the document settled on,
+  its declaration, and the merged fields
 - `POST /api/auth/session` - sign in under a display name, sets the session cookie
 - `POST /api/auth/signout` - clear the session cookie
 - `GET /api/auth/me` - the signed-in user, 401 when there is no session
@@ -156,27 +170,37 @@ Each of these has a regression test behind it.
   it".** A turn that says nothing about a field leaves the value standing. An
   empty string counts as missing too: the model fills fields it knows nothing
   about with `""`, which would otherwise wipe an answer given turns earlier.
-- **The cover page field names are pinned by a test.** `domain/nda.py` mirrors
-  `frontend/src/lib/nda.ts` by hand and the two are only ever sent to each
-  other, so renaming one side has to fail rather than drift.
-- **The chat prompt names all eleven clauses**, pinned by a test, because
-  nothing reads `templates/mutual-nda.md` at runtime.
+- **The browser is sent the document's declaration**, so it renders a cover page
+  it was never taught the shape of. Nothing is mirrored by hand across the
+  boundary any more, which is why the test that used to pin the NDA's field
+  names is gone rather than generalised.
+- **A slug the assistant invents names nothing**, and is read the same way as
+  naming none, so a hallucinated document costs a turn rather than a 500.
+- **Changing document mid-conversation empties the cover page**, because field
+  keys belong to the document they were gathered for.
+- **The chat prompt names every clause of every document**, pinned by a test,
+  because nothing reads `templates/*.md` at runtime. A second test re-runs the
+  generator and fails if the committed output has drifted from the templates.
 - **Frontend test contract.** The suites assert on accessible names, roles and
   text, never `data-testid`. Check before any restyle.
 
 ## Where the code lives
 
 ```
+documents/      <slug>.spec.json by hand, <slug>.clauses.json generated
 backend/app/    routers -> ai -> domain -> core, dependencies one way only
   core/         config, engine, session cookie, the auth dependency
-  domain/       models, schemas, the user upsert, the NDA shape and its merge
-  ai/           the provider client and the chat prompt
+  domain/       models, schemas, the user upsert, the field vocabulary,
+                the document registry and the merge
+  ai/           the provider client, the front desk and drafting prompts
   routers/      one module per resource, all mounted under /api
-frontend/src/
-  app/          page.tsx (chat beside the document), login/, globals.css
-  components/   AuthGate, ChatPanel, NdaDocument
-  lib/          api.ts (the one API client), nda.ts (the shape), fill.ts
-  content/      standard-terms.ts, the eleven clauses transcribed by hand
+frontend/
+  scripts/      generate-clauses.mjs, run by npm run generate
+  src/app/      page.tsx (chat beside the document), login/, globals.css
+  src/components/  AuthGate, ChatPanel, DocumentView
+  src/lib/      api.ts (the one API client), documents.ts (the spec shape),
+                fields.ts (how a field reads once filled)
+  src/content/generated/   the terms, generated from templates/
 ```
 
 `frontend/AGENTS.md` is written by `next dev` itself, not by hand. It is real,
@@ -189,6 +213,7 @@ backend refuses to start without it.
 
 ```bash
 ./scripts/start-mac.sh                                    # http://localhost:4000
+cd frontend && npm run generate                           # after any template or spec change
 docker build --target test -t prelegal-test . && \
   docker run --rm -e OPENROUTER_API_KEY=stub prelegal-test   # backend, 80% gate
 docker run --rm --env-file .env prelegal-test pytest -m live --no-cov

@@ -1,16 +1,24 @@
+import { readFileSync } from "node:fs";
+
 import { expect, type Page } from "@playwright/test";
 
-import { emptyNda, type NdaDetails } from "../src/lib/nda";
+export const GREETING = "What kind of agreement do you need?";
 
-export const GREETING = "What is this agreement for, and who are the two parties?";
+/** The real declarations, so the stub answers with what the server would. */
+export const spec = (slug: string) =>
+  JSON.parse(readFileSync(`../documents/${slug}.spec.json`, "utf8"));
+
+export const NDA = spec("mutual-nda");
 
 /** A cover page with nothing left to settle. */
-export const A_DRAFT: NdaDetails = {
-  ...emptyNda(),
+export const A_DRAFT: Record<string, unknown> = {
   purpose: "Evaluating a supply arrangement.",
   effectiveDate: "2026-08-31",
+  term: { mode: "expires", years: 2 },
+  confidentiality: { mode: "years", years: 5 },
   governingLaw: "Delaware",
   jurisdiction: "New Castle, DE",
+  modifications: "",
   partyOne: {
     company: "Acme Inc",
     name: "Ada Lovelace",
@@ -27,8 +35,30 @@ export const A_DRAFT: NdaDetails = {
 
 export interface Answer {
   reply: string;
-  fields: NdaDetails;
+  document?: string | null;
+  documentSpec?: unknown;
+  fields?: Record<string, unknown>;
 }
+
+/** An answer that is drafting the given document. */
+export const drafting = (
+  reply: string,
+  fields: Record<string, unknown> = {},
+  declared = NDA,
+): Answer => ({
+  reply,
+  document: declared.slug,
+  documentSpec: declared,
+  fields,
+});
+
+/** An answer that has not settled on anything yet. */
+export const undecided = (reply: string): Answer => ({
+  reply,
+  document: null,
+  documentSpec: null,
+  fields: {},
+});
 
 /**
  * Answers the chat routes from the test rather than from the model. The suite

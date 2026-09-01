@@ -196,6 +196,27 @@ body {
   text-align: justify;
 }
 
+/* The ten longer agreements state their terms in subclauses under a numbered
+   section. The Mutual NDA states each clause in one paragraph and has none. */
+.subclauses {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.subclauses li {
+  margin-bottom: 0.75rem;
+}
+
+.waiting-for-document {
+  border: 1px dashed var(--line);
+  border-radius: 6px;
+  color: var(--muted);
+  margin: 0 auto;
+  max-width: 48rem;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
 .attribution {
   margin-top: 2rem;
   border-top: 1px solid var(--line);
@@ -467,9 +488,14 @@ body {
   }
 
   .clauses li,
+  .subclauses li,
   .signatures,
   .document .field {
     break-inside: avoid;
+  }
+
+  .waiting-for-document {
+    display: none;
   }
 }
 

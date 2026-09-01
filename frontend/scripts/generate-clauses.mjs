@@ -6,7 +6,7 @@
  *
  * Run it after changing a template or a spec:
  *
- *   node scripts/generate-clauses.mjs
+ *   npm run generate --prefix frontend
  *
  * Nothing runs this during a Docker build and templates/ never enters the
  * image. The output is committed like any other source file, and
@@ -26,7 +26,9 @@ import { readFileSync, writeFileSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+// The repository root: this lives in frontend/scripts/, and reads templates/
+// and documents/ from beside frontend/.
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 const SPAN = /<span class="(?:coverpage|keyterms|orderform|sow|businessterms)_link"[^>]*>([^<]*)<\/span>/g;
 const HEADER_2 = /^(\d+)\.\s+<span class="header_2"[^>]*>(.*?)<\/span>\s*(.*)$/;
