@@ -1,0 +1,62 @@
+{
+  "slug": "pilot-agreement",
+  "title": "Pilot Agreement",
+  "shortName": "Pilot Agreement",
+  "source": "https://commonpaper.com/standards/pilot-agreement/1.0",
+  "preamble": "This Pilot Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Pilot Agreement Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Pilot Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "pilotPeriod",
+      "label": "Pilot Period",
+      "type": "text",
+      "prompt": "the pilot period the agreement names"
+    },
+    {
+      "key": "effectiveDate",
+      "label": "Effective Date",
+      "type": "date",
+      "prompt": "the effective date, as yyyy-mm-dd"
+    },
+    {
+      "key": "generalCapAmount",
+      "label": "General Cap Amount",
+      "type": "money",
+      "prompt": "the general cap amount, as an amount"
+    },
+    {
+      "key": "governingLaw",
+      "label": "Governing Law",
+      "type": "text",
+      "prompt": "the governing law the agreement names"
+    },
+    {
+      "key": "chosenCourts",
+      "label": "Chosen Courts",
+      "type": "text",
+      "prompt": "the chosen courts the agreement names"
+    },
+    {
+      "key": "noticeAddress",
+      "label": "Notice Address",
+      "type": "text",
+      "prompt": "the notice address the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatPanel } from "@/components/ChatPanel";
 import { ApiError, type ChatEntry } from "@/lib/api";
-import { emptyNda, type NdaDetails } from "@/lib/nda";
+import type { Drafted } from "@/components/ChatPanel";
 
 const { getGreeting, sendChatMessage } = vi.hoisted(() => ({
   getGreeting: vi.fn(),
@@ -18,28 +18,34 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   sendChatMessage,
 }));
 
+const NOTHING_YET: Drafted = { document: null, spec: null, fields: {} };
+
 /** ChatPanel is controlled, so the test holds the state its parent would. */
 const Harness = () => {
   const [history, setHistory] = useState<ChatEntry[]>([]);
-  const [details, setDetails] = useState(emptyNda);
+  const [drafted, setDrafted] = useState<Drafted>(NOTHING_YET);
   return (
     <>
       <ChatPanel
         history={history}
-        details={details}
-        onExchange={(entries, fields) => {
+        drafted={drafted}
+        onExchange={(entries, next) => {
           setHistory(entries);
-          setDetails(fields);
+          setDrafted(next);
         }}
       />
-      <p>Governing law: {details.governingLaw}</p>
+      <p>Drafting: {drafted.document ?? "nothing yet"}</p>
+      <p>Governing law: {String(drafted.fields.governingLaw ?? "")}</p>
     </>
   );
 };
 
-const withGoverningLaw = (law: string): NdaDetails => ({
-  ...emptyNda(),
-  governingLaw: law,
+/** What the server answers with once a document is being drafted. */
+const answered = (fields: Record<string, unknown> = {}) => ({
+  reply: "Noted.",
+  document: "mutual-nda",
+  documentSpec: { slug: "mutual-nda", fields: [] },
+  fields,
 });
 
 beforeEach(() => {
@@ -61,8 +67,8 @@ describe("ChatPanel", () => {
 
   it("shows what the user said and what came back", async () => {
     sendChatMessage.mockResolvedValue({
+      ...answered(),
       reply: "Which state's law?",
-      fields: emptyNda(),
     });
     render(<Harness />);
     await screen.findByText("What is this agreement for?");
@@ -73,11 +79,19 @@ describe("ChatPanel", () => {
     expect(screen.getByText("Which state's law?")).toBeInTheDocument();
   });
 
+  it("carries the document the assistant settled on up to the page", async () => {
+    sendChatMessage.mockResolvedValue(answered());
+    render(<Harness />);
+    await screen.findByText("What is this agreement for?");
+    expect(screen.getByText("Drafting: nothing yet")).toBeInTheDocument();
+
+    await say("An NDA please");
+
+    expect(screen.getByText("Drafting: mutual-nda")).toBeInTheDocument();
+  });
+
   it("carries the fields the assistant gathered up to the page", async () => {
-    sendChatMessage.mockResolvedValue({
-      reply: "Noted.",
-      fields: withGoverningLaw("Delaware"),
-    });
+    sendChatMessage.mockResolvedValue(answered({ governingLaw: "Delaware" }));
     render(<Harness />);
     await screen.findByText("What is this agreement for?");
 
@@ -87,21 +101,23 @@ describe("ChatPanel", () => {
   });
 
   it("sends the conversation so far, so the assistant has the thread", async () => {
-    sendChatMessage.mockResolvedValue({ reply: "Noted.", fields: emptyNda() });
+    sendChatMessage.mockResolvedValue(answered());
     render(<Harness />);
     await screen.findByText("What is this agreement for?");
 
     await say("Delaware law");
 
-    const [message, history] = sendChatMessage.mock.calls[0];
+    const [message, history, document] = sendChatMessage.mock.calls[0];
     expect(message).toBe("Delaware law");
     expect(history).toEqual([
       { role: "assistant", content: "What is this agreement for?" },
     ]);
+    // Nothing is settled on yet, so the assistant is still at the front desk.
+    expect(document).toBeNull();
   });
 
   it("empties the box once the message has been sent", async () => {
-    sendChatMessage.mockResolvedValue({ reply: "Noted.", fields: emptyNda() });
+    sendChatMessage.mockResolvedValue(answered());
     render(<Harness />);
     await screen.findByText("What is this agreement for?");
 
@@ -136,7 +152,7 @@ describe("ChatPanel", () => {
   });
 
   it("leaves the cursor in the box, ready for the next answer", async () => {
-    sendChatMessage.mockResolvedValue({ reply: "Noted.", fields: emptyNda() });
+    sendChatMessage.mockResolvedValue(answered());
     render(<Harness />);
     await screen.findByText("What is this agreement for?");
 
@@ -157,7 +173,7 @@ describe("ChatPanel", () => {
 
     expect(screen.getByRole("status")).toHaveTextContent("Waiting for a reply");
 
-    answer({ reply: "Noted.", fields: emptyNda() });
+    answer(answered());
     await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
   });
 

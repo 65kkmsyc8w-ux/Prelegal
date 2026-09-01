@@ -8,7 +8,6 @@ import {
   sendChatMessage,
   signOut,
 } from "@/lib/api";
-import { emptyNda } from "@/lib/nda";
 
 const respondWith = (status: number, body: unknown) =>
   vi.fn().mockResolvedValue({
@@ -84,14 +83,13 @@ describe("the chat client", () => {
     expect(lastCall()[0]).toBe("/api/chat/greeting");
   });
 
-  it("sends the message, the thread and the fields so far", async () => {
-    vi.stubGlobal(
-      "fetch",
-      respondWith(200, { reply: "Noted.", fields: emptyNda() }),
-    );
+  it("sends the message, the thread, the document and the fields so far", async () => {
+    vi.stubGlobal("fetch", respondWith(200, { reply: "Noted.", fields: {} }));
     const history = [{ role: "assistant" as const, content: "Hello" }];
 
-    await sendChatMessage("Delaware law", history, emptyNda());
+    await sendChatMessage("Delaware law", history, "mutual-nda", {
+      governingLaw: "Delaware",
+    });
 
     const [path, init] = lastCall();
     expect(path).toBe("/api/chat/message");
@@ -99,14 +97,23 @@ describe("the chat client", () => {
     expect(JSON.parse(init.body)).toEqual({
       message: "Delaware law",
       history,
-      fields: emptyNda(),
+      document: "mutual-nda",
+      fields: { governingLaw: "Delaware" },
     });
+  });
+
+  it("says no document is settled on while the assistant is still asking", async () => {
+    vi.stubGlobal("fetch", respondWith(200, { reply: "Noted.", fields: {} }));
+
+    await sendChatMessage("I need something", [], null, {});
+
+    expect(JSON.parse(lastCall()[1].body).document).toBeNull();
   });
 
   it("reports a provider failure with the reason the backend gave", async () => {
     vi.stubGlobal("fetch", respondWith(502, { detail: "The AI answered with nothing" }));
 
-    await expect(sendChatMessage("Hi", [], emptyNda())).rejects.toThrow(
+    await expect(sendChatMessage("Hi", [], null, {})).rejects.toThrow(
       "The AI answered with nothing",
     );
   });

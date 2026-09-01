@@ -1,0 +1,68 @@
+{
+  "slug": "service-level-agreement",
+  "title": "Service Level Agreement",
+  "shortName": "SLA",
+  "source": "https://commonpaper.com/standards/sla/1.0",
+  "preamble": "This Service Level Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Service Level Agreement Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Service Level Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "targetUptime",
+      "label": "Target Uptime",
+      "type": "text",
+      "prompt": "the target uptime the agreement names"
+    },
+    {
+      "key": "subscriptionPeriod",
+      "label": "Subscription Period",
+      "type": "text",
+      "prompt": "the subscription period the agreement names"
+    },
+    {
+      "key": "targetResponseTime",
+      "label": "Target Response Time",
+      "type": "text",
+      "prompt": "the target response time the agreement names"
+    },
+    {
+      "key": "supportChannel",
+      "label": "Support Channel",
+      "type": "text",
+      "prompt": "the support channel the agreement names"
+    },
+    {
+      "key": "uptimeCredit",
+      "label": "Uptime Credit",
+      "type": "money",
+      "prompt": "the uptime credit, as an amount"
+    },
+    {
+      "key": "responseTimeCredit",
+      "label": "Response Time Credit",
+      "type": "money",
+      "prompt": "the response time credit, as an amount"
+    },
+    {
+      "key": "scheduledDowntime",
+      "label": "Scheduled Downtime",
+      "type": "text",
+      "prompt": "the scheduled downtime the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

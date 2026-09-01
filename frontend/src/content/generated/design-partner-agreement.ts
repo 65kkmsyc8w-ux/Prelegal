@@ -1,0 +1,258 @@
+// Generated from templates/design-partner-agreement.md by scripts/generate-clauses.mjs.
+// Do not edit by hand; run the generator instead.
+
+import type { Clause } from "@/content/clause";
+
+export const CLAUSES: Clause[] = [
+  {
+    "number": "1",
+    "heading": "Design Partner Overview",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "1.1",
+        "heading": "Product Access",
+        "body": "Partner would like to be one of the first users of the Product. During the Term, Partner will have early access to the Product for its internal business purposes and to give Feedback to Provider and participate in the Program, so long as Partner complies with the terms of this Agreement."
+      },
+      {
+        "number": "1.2",
+        "heading": "Program and Feedback",
+        "body": "The purpose of the Program is for Provider to develop, build, and improve the Product for general use by all of Provider's customers or users. Partner will give Feedback to Provider on a mutually agreed schedule and will participate in the Program."
+      },
+      {
+        "number": "1.3",
+        "heading": "Product Improvement",
+        "body": "Provider will develop and improve the Product and may use all Feedback and insight about the Product from the Program freely without any restriction or obligation. Partner will not give any Feedback that Provider cannot use in this manner or for the purpose."
+      }
+    ]
+  },
+  {
+    "number": "2",
+    "heading": "Fees and Costs",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "2.1",
+        "heading": "",
+        "body": "Partner will pay Provider the Fees, if any."
+      }
+    ]
+  },
+  {
+    "number": "3",
+    "heading": "Term & Termination",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "3.1",
+        "heading": "Agreement Term",
+        "body": "This Agreement will start on the Effective Date and continue for the Term. Provider and Partner may mutually agree to extend the Term, including by email communication."
+      },
+      {
+        "number": "3.2",
+        "heading": "Termination",
+        "body": "Either party may terminate this Agreement for any or no reason. To terminate this Agreement, the terminating party must notify the other party about termination by giving the other party 30 days advance notice."
+      },
+      {
+        "number": "3.3",
+        "heading": "Effect of Termination",
+        "body": "Upon expiration or termination of the Agreement:"
+      },
+      {
+        "number": "3.3.a",
+        "heading": "",
+        "body": "Partner will no longer have any right to access or use the Product. Partner will no longer be required to provide Feedback or participate in the Program under the Agreement."
+      },
+      {
+        "number": "3.3.b",
+        "heading": "",
+        "body": "Each Recipient will return or destroy Discloser’s Confidential Information in its possession or control."
+      },
+      {
+        "number": "3.4",
+        "heading": "Survival",
+        "body": ""
+      },
+      {
+        "number": "3.4.a",
+        "heading": "",
+        "body": "The following sections will survive expiration or termination of the Agreement: Section 1.3 (Product Improvement), Section 3.3 (Effect of Termination), Section 3.4 (Survival), Section 4 (Disclaimer of Warranties), Section 5 (Confidentiality), Section 6 (Intellectual Property), Section 7 (General Terms), Section 8 (Definitions), and the portions of a Cover Page referenced by these sections."
+      },
+      {
+        "number": "3.4.b",
+        "heading": "",
+        "body": "Each Recipient may retain Discloser’s Confidential Information in accordance with its standard backup or record retention policies maintained in the ordinary course of business or as required by Applicable Laws, in which case Section 5 (Confidentiality) will continue to apply to retained Confidential Information."
+      }
+    ]
+  },
+  {
+    "number": "4",
+    "heading": "Disclaimer of Warranties",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "4.1",
+        "heading": "",
+        "body": "Provider and Partner each disclaim all warranties, whether express or implied, including the implied warranties of merchantability, fitness for a particular purpose, title, and non-infringement. These disclaimers apply to the maximum extent permitted by Applicable Laws."
+      }
+    ]
+  },
+  {
+    "number": "5",
+    "heading": "Confidentiality",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "5.1",
+        "heading": "Non-Use and Non-Disclosure",
+        "body": "Unless otherwise authorized in the Agreement, Recipient will (a) only use Discloser’s Confidential Information to fulfill its obligations or exercise its rights under this Agreement; and (b) not disclose Discloser’s Confidential Information to anyone else. In addition, Recipient will protect Discloser’s Confidential Information using at least the same protections Recipient uses for its own similar information but no less than a reasonable standard of care."
+      },
+      {
+        "number": "5.2",
+        "heading": "Exclusions",
+        "body": "Confidential Information does not include information that (a) Recipient knew without any obligation of confidentiality before disclosure by Discloser; (b) is or becomes publicly known and generally available through no fault of Recipient; (c) Recipient receives under no obligation of confidentiality from someone else who is authorized to make the disclosure; or (d) Recipient independently developed without use of or reference to Discloser’s Confidential Information. In addition, Feedback does not constitute Partner's Confidential Information and Provider may use Partner's Confidential Information to provide the Product."
+      },
+      {
+        "number": "5.3",
+        "heading": "Required Disclosures",
+        "body": "Recipient may disclose Discloser’s Confidential Information to the extent required by Applicable Laws if, unless prohibited by Applicable Laws, Recipient provides the Discloser reasonable advance notice of the required disclosure and reasonably cooperates, at the Discloser’s expense, with the Discloser’s efforts to obtain confidential treatment for the Confidential Information."
+      },
+      {
+        "number": "5.4",
+        "heading": "Permitted Disclosures",
+        "body": "Recipient may disclose Discloser’s Confidential Information to Users, employees, advisors, contractors, and representatives who each have a need to know the Confidential Information, but only if the person or entity is bound by confidentiality obligations at least as protective as those in this Section 5 and Recipient remains responsible for everyone’s compliance with the terms of this Section 5."
+      }
+    ]
+  },
+  {
+    "number": "6",
+    "heading": "Intellectual Property",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "6.1",
+        "heading": "Reservation of Rights",
+        "body": "Except for the limited license to access the Product in Section 1.1 (Product Access), Provider retains all right, title, and interest in and to the Product, including any aspects, features, or functionality created in response to Feedback or Partner's participation in the Program, whether developed before or after the Effective Date. Each Discloser retains all right, title, and interest in and to its Confidential Information."
+      },
+      {
+        "number": "6.2",
+        "heading": "Ownership",
+        "body": "Provider owns all Feedback. Partner hereby assigns to Provider all its right, title, and interest in and to Feedback and will reasonably cooperate with Provider as needed to establish, prove, or defend Provider's ownership of Feedback."
+      }
+    ]
+  },
+  {
+    "number": "7",
+    "heading": "General Terms",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "7.1",
+        "heading": "Entire Agreement",
+        "body": "This Agreement is the only agreement between the parties about its subject and this Agreement supersedes all prior or contemporaneous statements (whether in writing or not) about its subject."
+      },
+      {
+        "number": "7.2",
+        "heading": "Modifications, Severability, and Waiver",
+        "body": "Any waiver, modification, or change to the Agreement must be in writing and signed or electronically accepted by each party. If any term of this Agreement is determined to be invalid or unenforceable by a relevant court or governing body, the remaining terms of this Agreement will remain in full force and effect. The failure of a party to enforce a term or to exercise an option or right in this Agreement will not constitute a waiver by that party of the term, option, or right."
+      },
+      {
+        "number": "7.3",
+        "heading": "Governing Law and Chosen Courts",
+        "body": "The Governing Law will govern all interpretations and disputes about this Agreement, without regard to its conflict of laws provisions. The parties will bring any legal suit, action, or proceeding about this Agreement in the Chosen Courts and each party irrevocably submits to the exclusive jurisdiction of the Chosen Courts."
+      },
+      {
+        "number": "7.4",
+        "heading": "Injunctive Relief",
+        "body": "Despite Section 7.3 (Governing Law and Chosen Courts), a breach of Section 5 (Confidentiality) or the violation of a party’s intellectual property rights may cause irreparable harm for which monetary damages cannot adequately compensate. As a result, upon the actual or threatened breach of Section 5 (Confidentiality) or violation of a party’s intellectual property rights, the non-breaching or non-violating party may seek appropriate equitable relief, including an injunction, in any court of competent jurisdiction without the need to post a bond and without limiting its other rights or remedies."
+      },
+      {
+        "number": "7.5",
+        "heading": "Restrictions",
+        "body": "Except as expressly permitted by this Agreement, Partner will not (and will not allow anyone else to): (a) reverse engineer, decompile, or attempt to discover any source code or underlying ideas or algorithms of the Product (except to the extent Applicable Laws prohibit this restriction); (b) provide, sell, transfer, sublicense, lend, distribute, rent, or otherwise allow others to access or use the Product; (c) remove any proprietary notices or labels; (d) copy, modify, or create derivative works of the Product; (e) conduct security or vulnerability tests on, interfere with the operation of, cause performance degradation of, or circumvent access restrictions of the Product; (f) access accounts, information, data, or portions of the Product to which Partner does not have explicit authorization; (g) use the Product to develop a competing service or product; (h) use the Product with activity prohibited by Applicable Laws; (i) use the Product to obtain unauthorized access to anyone else’s networks or equipment; or (j) upload, submit, or otherwise make available to the Product any information or content to which Partner does not have the proper rights."
+      },
+      {
+        "number": "7.6",
+        "heading": "Non-Exhaustive Remedies",
+        "body": "Except where the Agreement provides for an exclusive remedy, seeking or exercising a remedy does not limit the other rights or remedies available to a party."
+      },
+      {
+        "number": "7.7",
+        "heading": "Assignment",
+        "body": "Neither party may assign any rights or obligations under this Agreement without the prior written consent of the other party. However, either party may assign this Agreement upon notice if the assigning party undergoes a merger, change of control, reorganization, or sale of all or substantially all its equity, business, or assets to which this Agreement relates. Any attempted but non-permitted assignment is void. This Agreement will be binding upon and inure to the benefit of the parties and their permitted successors and assigns."
+      },
+      {
+        "number": "7.8",
+        "heading": "Notices",
+        "body": "Any notice, request, or approval about the Agreement must be in writing and sent to the Notice Address. Notices will be deemed given (a) upon confirmed delivery if by email, registered or certified mail, or personal delivery; or (b) two days after mailing if by overnight commercial delivery."
+      },
+      {
+        "number": "7.9",
+        "heading": "Independent Contractors",
+        "body": "The parties are independent contractors, not agents, partners, or joint venturers. Neither party is authorized to bind the other to any liability or obligation."
+      },
+      {
+        "number": "7.10",
+        "heading": "No Third-Party Beneficiary",
+        "body": "There are no third-party beneficiaries of this Agreement."
+      },
+      {
+        "number": "7.11",
+        "heading": "Titles and Interpretation",
+        "body": "Section titles are for convenience and reference only. All uses of \"including\" and similar phrases are non-exhaustive and without limitation. The United Nations Convention for the International Sale of Goods and the Uniform Computer Information Transaction Act do not apply to this Agreement."
+      },
+      {
+        "number": "7.12",
+        "heading": "Signature",
+        "body": "This Agreement may be signed in counterparts, including by electronic copies or acceptance mechanism. Each copy will be deemed an original and all copies, when taken together, will be the same agreement."
+      }
+    ]
+  },
+  {
+    "number": "8",
+    "heading": "Definitions",
+    "body": "",
+    "subclauses": [
+      {
+        "number": "8.1",
+        "heading": "",
+        "body": "\"Agreement\" means these Standard Terms, the Cover Page between Provider and Partner, and the policies and documents referenced in or attached to the Cover Page."
+      },
+      {
+        "number": "8.2",
+        "heading": "",
+        "body": "\"Applicable Laws\" means the laws, rules, regulations, court orders, and other binding requirements of a relevant government authority that apply to or govern Provider or Partner."
+      },
+      {
+        "number": "8.3",
+        "heading": "",
+        "body": "\"Confidential Information\" means information in any form disclosed by or on behalf of a Discloser, including before the Effective Date, to a Recipient in connection with this Agreement that (a) the Discloser identifies as \"confidential\", \"proprietary\", or the like; or (b) should be reasonably understood as confidential or proprietary due to its nature and the circumstances of its disclosure. Confidential Information includes the existence of this Agreement and the information on each Cover Page. Provider's Confidential Information includes non-public information about the Product."
+      },
+      {
+        "number": "8.4",
+        "heading": "",
+        "body": "\"Cover Page\" means a document that is signed or electronically accepted by the parties that incorporates these Standard Terms and identifies Provider and Partner."
+      },
+      {
+        "number": "8.5",
+        "heading": "",
+        "body": "\"Discloser\" means a party to this Agreement when the party is providing or disclosing Confidential Information to the other party."
+      },
+      {
+        "number": "8.6",
+        "heading": "",
+        "body": "\"Feedback\" means suggestions, feedback, or comments about the Product or related offerings."
+      },
+      {
+        "number": "8.7",
+        "heading": "",
+        "body": "\"Product\" means the product or services described in the Cover Page."
+      },
+      {
+        "number": "8.8",
+        "heading": "",
+        "body": "\"Recipient\" means a party to this Agreement when the party receives Confidential Information from the other party."
+      }
+    ]
+  }
+];

@@ -1,26 +1,48 @@
 import { expect, test } from "@playwright/test";
 
-import { emptyNda } from "../src/lib/nda";
-import { A_DRAFT, say, signIn, stubChat, stubChatFailure } from "./support";
+import {
+  A_DRAFT,
+  drafting,
+  say,
+  signIn,
+  spec,
+  stubChat,
+  stubChatFailure,
+  undecided,
+} from "./support";
 
 const HALF_WAY = {
-  ...emptyNda(),
   purpose: A_DRAFT.purpose,
   partyOne: A_DRAFT.partyOne,
   partyTwo: A_DRAFT.partyTwo,
 };
 
+const PILOT = spec("pilot-agreement");
+
 test.beforeEach(async ({ page }) => {
   await signIn(page);
 });
 
-test("builds the agreement as the conversation goes on", async ({ page }) => {
-  await stubChat(page, [{ reply: "Which state's law?", fields: A_DRAFT }]);
+test("opens on the conversation, with no agreement chosen yet", async ({ page }) => {
+  await stubChat(page, [drafting("Noted.")]);
   await page.goto("/");
+
+  await expect(page.getByText("What kind of agreement do you need?")).toBeVisible();
+  await expect(page.getByRole("article")).toBeHidden();
+});
+
+test("builds the agreement as the conversation goes on", async ({ page }) => {
+  await stubChat(page, [
+    drafting("A Mutual NDA then. Which state's law?", {}),
+    drafting("That is everything.", A_DRAFT),
+  ]);
+  await page.goto("/");
+
+  await say(page, "An NDA between Acme Inc and Beta Ltd for a supply arrangement.");
   const agreement = page.getByRole("article");
   await expect(agreement).toContainText("[Governing Law]");
 
-  await say(page, "An NDA between Acme Inc and Beta Ltd for a supply arrangement.");
+  await say(page, "Delaware law, and the courts in New Castle, DE.");
 
   await expect(agreement).toContainText("Evaluating a supply arrangement.");
   await expect(agreement).toContainText("31 August 2026");
@@ -33,8 +55,8 @@ test("keeps what was settled earlier when a later answer adds to it", async ({
   page,
 }) => {
   await stubChat(page, [
-    { reply: "Which state's law?", fields: HALF_WAY },
-    { reply: "That is everything.", fields: A_DRAFT },
+    drafting("Which state's law?", HALF_WAY),
+    drafting("That is everything.", A_DRAFT),
   ]);
   await page.goto("/");
 
@@ -47,13 +69,37 @@ test("keeps what was settled earlier when a later answer adds to it", async ({
   await expect(page.getByRole("article")).toContainText("Delaware");
 });
 
-test("opens with the assistant asking the first question", async ({ page }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: emptyNda() }]);
+test("says what it cannot draft and offers the nearest thing it can", async ({
+  page,
+}) => {
+  await stubChat(page, [
+    undecided(
+      "We cannot draft an employment contract. The closest we can is a Professional Services Agreement.",
+    ),
+  ]);
   await page.goto("/");
 
+  await say(page, "I need an employment contract.");
+
+  await expect(page.getByText(/cannot draft an employment contract/)).toBeVisible();
+  await expect(page.getByRole("article")).toBeHidden();
+});
+
+test("drafts an agreement other than the NDA", async ({ page }) => {
+  await stubChat(page, [
+    drafting("A Pilot Agreement then.", { governingLaw: "Delaware" }, PILOT),
+  ]);
+  await page.goto("/");
+
+  await say(page, "We want a customer to trial our product for 60 days.");
+
+  const agreement = page.getByRole("article");
   await expect(
-    page.getByText("What is this agreement for, and who are the two parties?"),
+    page.getByRole("heading", { level: 1, name: "Pilot Agreement" }),
   ).toBeVisible();
+  await expect(agreement).toContainText("Delaware");
+  // Its terms are written in subclauses, unlike the NDA's single paragraphs.
+  await expect(agreement.locator(".subclauses li").first()).toBeVisible();
 });
 
 test("says so when the assistant cannot answer, keeping what was typed", async ({
@@ -72,7 +118,7 @@ test("says so when the assistant cannot answer, keeping what was typed", async (
 });
 
 test("names the parties in the signature table", async ({ page }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: A_DRAFT }]);
+  await stubChat(page, [drafting("Noted.", A_DRAFT)]);
   await page.goto("/");
   await say(page, "Acme Inc and Beta Ltd.");
 
@@ -85,8 +131,9 @@ test("names the parties in the signature table", async ({ page }) => {
 });
 
 test("carries the whole agreement, both halves", async ({ page }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: emptyNda() }]);
+  await stubChat(page, [drafting("Noted.")]);
   await page.goto("/");
+  await say(page, "An NDA please.");
 
   await expect(page.getByRole("heading", { name: "Cover Page" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Standard Terms" })).toBeVisible();
@@ -95,14 +142,13 @@ test("carries the whole agreement, both halves", async ({ page }) => {
 });
 
 test("puts the conversation beside the agreement on a wide screen", async ({ page }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: emptyNda() }]);
+  await stubChat(page, [drafting("Noted.")]);
   await page.goto("/");
+  await say(page, "An NDA please.");
   await page.setViewportSize({ width: 1440, height: 900 });
 
-  const chat = page.locator(".chat-column");
-  const agreement = page.locator(".document-column");
-  const chatBox = (await chat.boundingBox())!;
-  const agreementBox = (await agreement.boundingBox())!;
+  const chatBox = (await page.locator(".chat-column").boundingBox())!;
+  const agreementBox = (await page.locator(".document-column").boundingBox())!;
 
   expect(agreementBox.x).toBeGreaterThan(chatBox.x + chatBox.width - 1);
 });
@@ -110,8 +156,9 @@ test("puts the conversation beside the agreement on a wide screen", async ({ pag
 test("stacks the conversation above the agreement on a narrow screen", async ({
   page,
 }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: emptyNda() }]);
+  await stubChat(page, [drafting("Noted.")]);
   await page.goto("/");
+  await say(page, "An NDA please.");
   await page.setViewportSize({ width: 500, height: 900 });
 
   const chatBox = (await page.locator(".chat-column").boundingBox())!;
@@ -123,7 +170,7 @@ test("stacks the conversation above the agreement on a narrow screen", async ({
 
 test.describe("printing", () => {
   test.beforeEach(async ({ page }) => {
-    await stubChat(page, [{ reply: "Noted.", fields: A_DRAFT }]);
+    await stubChat(page, [drafting("Noted.", A_DRAFT)]);
     await page.goto("/");
     await say(page, "Everything, please.");
     await page.emulateMedia({ media: "print" });
@@ -168,7 +215,7 @@ test.describe("printing", () => {
 });
 
 test("the download button asks the browser to print", async ({ page }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: emptyNda() }]);
+  await stubChat(page, [drafting("Noted.")]);
   await page.addInitScript(() => {
     (window as unknown as { printed: number }).printed = 0;
     window.print = () => {
@@ -176,22 +223,25 @@ test("the download button asks the browser to print", async ({ page }) => {
     };
   });
   await page.goto("/");
+  await say(page, "An NDA please.");
 
   await page.getByRole("button", { name: "Download PDF" }).click();
 
-  expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
+  expect(
+    await page.evaluate(() => (window as unknown as { printed: number }).printed),
+  ).toBe(1);
 });
 
 test("keeps the draft in the browser, with nothing carried across a reload", async ({
   page,
 }) => {
-  await stubChat(page, [{ reply: "Noted.", fields: A_DRAFT }]);
+  await stubChat(page, [drafting("Noted.", A_DRAFT)]);
   await page.goto("/");
   await say(page, "Everything, please.");
   await expect(page.getByRole("article")).toContainText("Acme Inc");
 
   await page.reload();
 
-  await expect(page.getByRole("article")).toContainText("[Purpose]");
-  expect(A_DRAFT.partyOne.company).toBe("Acme Inc");
+  await expect(page.getByRole("article")).toBeHidden();
+  await expect(page.getByText(/settled on which agreement/)).toBeVisible();
 });

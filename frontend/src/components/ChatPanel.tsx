@@ -8,12 +8,18 @@ import {
   sendChatMessage,
   type ChatEntry,
 } from "@/lib/api";
-import type { NdaDetails } from "@/lib/nda";
+import type { DocumentSpec, Fields } from "@/lib/documents";
+
+export interface Drafted {
+  document: string | null;
+  spec: DocumentSpec | null;
+  fields: Fields;
+}
 
 interface ChatPanelProps {
   history: ChatEntry[];
-  details: NdaDetails;
-  onExchange: (history: ChatEntry[], details: NdaDetails) => void;
+  drafted: Drafted;
+  onExchange: (history: ChatEntry[], drafted: Drafted) => void;
 }
 
 const failureText = (cause: unknown) =>
@@ -21,7 +27,7 @@ const failureText = (cause: unknown) =>
     ? cause.message
     : "Could not reach the server. Try again.";
 
-export const ChatPanel = ({ history, details, onExchange }: ChatPanelProps) => {
+export const ChatPanel = ({ history, drafted, onExchange }: ChatPanelProps) => {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,9 +40,9 @@ export const ChatPanel = ({ history, details, onExchange }: ChatPanelProps) => {
     }
     opened.current = true;
     getGreeting()
-      .then(({ reply }) => onExchange([{ role: "assistant", content: reply }], details))
+      .then(({ reply }) => onExchange([{ role: "assistant", content: reply }], drafted))
       .catch((cause) => setError(failureText(cause)));
-  }, [details, onExchange]);
+  }, [drafted, onExchange]);
 
   const send = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,11 +50,17 @@ export const ChatPanel = ({ history, details, onExchange }: ChatPanelProps) => {
     setError(null);
     const asked: ChatEntry = { role: "user", content: draft };
     try {
-      const answer = await sendChatMessage(draft, history, details);
-      onExchange(
-        [...history, asked, { role: "assistant", content: answer.reply }],
-        answer.fields,
+      const answer = await sendChatMessage(
+        draft,
+        history,
+        drafted.document,
+        drafted.fields,
       );
+      onExchange([...history, asked, { role: "assistant", content: answer.reply }], {
+        document: answer.document,
+        spec: answer.documentSpec,
+        fields: answer.fields,
+      });
       setDraft("");
     } catch (cause) {
       // The draft is left in the box: the message never reached the assistant,

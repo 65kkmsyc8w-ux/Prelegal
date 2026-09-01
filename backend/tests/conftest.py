@@ -4,7 +4,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.ai import chat
 from app.core.db import get_session
 from app.domain.models import Base
 from app.main import app
@@ -50,16 +49,17 @@ def signed_in_client(client):
 @pytest.fixture
 def ai_turn(monkeypatch):
     """Stubs the provider with a fixed structured turn, so no test in the
-    default run reaches OpenRouter."""
+    default run reaches OpenRouter. The schema differs between the front desk,
+    which only names a document, and drafting, which also reports fields."""
 
-    def set_turn(reply="Noted.", **fields):
-        turn = chat.ChatTurn.model_validate({"reply": reply, "fields": fields})
-        monkeypatch.setattr(
-            chat_router.client,
-            "complete_structured",
-            lambda *_args, **_kwargs: turn,
-        )
-        return turn
+    def set_turn(reply="Noted.", document=None, **fields):
+        def answer(_messages, schema):
+            answered = {"reply": reply, "document": document}
+            if "fields" in schema.model_fields:
+                answered["fields"] = fields
+            return schema.model_validate(answered)
+
+        monkeypatch.setattr(chat_router.client, "complete_structured", answer)
 
     return set_turn
 
