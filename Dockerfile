@@ -29,6 +29,8 @@ RUN uv sync --frozen
 
 COPY backend/app ./app
 COPY backend/tests ./tests
+COPY documents ./documents
+COPY catalog.json ./catalog.json
 COPY --from=frontend /frontend/out ./static
 
 CMD ["pytest"]
@@ -39,6 +41,8 @@ FROM base AS runtime
 RUN uv sync --frozen --no-dev
 
 COPY backend/app ./app
+COPY documents ./documents
+COPY catalog.json ./catalog.json
 COPY --from=frontend /frontend/out ./static
 
 EXPOSE 8000

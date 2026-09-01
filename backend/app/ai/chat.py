@@ -1,45 +1,38 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, create_model
 
 from app.core import config
-from app.domain.nda import NdaDetails, NdaFieldsUpdate
+from app.domain import documents
+from app.domain.documents import DocumentSpec
+from app.domain.fields import FieldSpec, FieldType, update_model
 from app.domain.schemas import ChatEntry
 
 GREETING = (
-    "Let's put together your Mutual NDA. Tell me what the agreement is for and "
-    "who the two companies are, and I will ask about the rest as we go."
+    "Tell me what kind of agreement you need and I will help you put it "
+    "together. If we cannot draft the one you have in mind, I will say so and "
+    "suggest the closest one we can."
 )
 
-# The eleven Standard Terms, transcribed by hand from templates/mutual-nda.md,
-# the same way frontend/src/content/standard-terms.ts is. Nothing reads the
-# template at runtime and it is not copied into the image; test_chat_prompt.py
-# pins the list so an edit cannot quietly drop one.
-CLAUSES = """1 Introduction. What counts as Confidential Information.
-2 Use and Protection of Confidential Information. It may be used only for the Purpose.
-3 Exceptions. Information already public, already known, or independently developed.
-4 Disclosures Required by Law. Notice before disclosing under a legal order.
-5 Term and Termination. The MNDA runs from the Effective Date for the MNDA Term.
-6 Return or Destruction of Confidential Information. On request or at the end.
-7 Proprietary Rights. Disclosure grants no licence.
-8 Disclaimer. Confidential Information comes as is, with no warranty.
-9 Governing Law and Jurisdiction. Named on the cover page.
-10 Equitable Relief. Breach may be met with an injunction.
-11 General. Assignment, notices, and the whole agreement."""
+# Before a document is settled on, the assistant is working out which of the
+# eleven is wanted. It answers with a slug or with nothing, and the router
+# treats anything it does not recognise as nothing.
+FRONT_DESK_PROMPT = """You help someone choose which legal agreement to draft, from the ones we can draft. These are all of them:
 
-SYSTEM_PROMPT = f"""You help someone draft a Common Paper Mutual Non-Disclosure Agreement by talking to them.
+{listing}
+
+Work out which one fits what they describe, and say which you think it is and why in one short paragraph.
+
+If they ask for an agreement that is not on the list, say plainly that we cannot draft that one, name the closest one we can, and explain in one sentence why it is the nearest fit. Do not offer to draft anything that is not on the list.
+
+Set document to the slug only once it is settled: either they asked for one of ours, or they agreed to the one you offered instead. While it is still open, leave document null.
+
+Never write any agreement text yourself. Never use emojis."""
+
+DRAFTING_PROMPT = """You help someone draft a Common Paper {title} by talking to them.
 
 Ask about the agreement one or two points at a time, in plain language, and never all at once. Do not ask again for something already known. Never write the agreement text yourself: the document is built from the fields beside you, and your reply is only your side of the conversation, one short paragraph at most. Never use emojis.
 
 The cover page needs all of this:
-- purpose: what the parties will use each other's confidential information for
-- effectiveDate: the date it takes effect, as yyyy-mm-dd
-- termKind: "expires" after a set number of years, or "untilTerminated"
-- termYears: how many years, when it expires
-- confidentialityKind: confidentiality lasts a number of "years", or is "perpetual"
-- confidentialityYears: how many years, when it is not perpetual
-- governingLaw: the state whose law governs
-- jurisdiction: the city or county and state whose courts hear disputes
-- modifications: any change to the standard terms, otherwise leave it alone
-- partyOne and partyTwo: each with company, name and title of whoever signs, and noticeAddress
+{fields}
 
 Take every value a message gives you, even several at once, and even ones you did not ask for. A message naming both the law and the courts fills in both.
 
@@ -47,24 +40,80 @@ Set a field only when the latest message gives or changes its value. Leave every
 
 Once every field above is known, say so, and tell them they can download the agreement.
 
-These are the standard terms the agreement incorporates, so you can answer questions about it:
-{CLAUSES}"""
+If they say they want a different agreement instead, set document to that one's slug. These are the ones we can draft:
+{listing}
+
+These are the terms this agreement incorporates, so you can answer questions about it:
+{clauses}"""
 
 
-class ChatTurn(BaseModel):
+def _field_line(field: FieldSpec) -> str:
+    line = f"- {field.key}: {field.prompt}"
+    if field.type is FieldType.CHOICE:
+        allowed = ", ".join(f'"{option.value}"' for option in field.options)
+        return f"{line}. One of {allowed}"
+    if field.type is FieldType.DURATION:
+        allowed = ", ".join(f'"{mode.value}"' for mode in field.modes)
+        counted = ", and years when it counts a number of years"
+        return f'{line}. Give it as {{"mode": one of {allowed}{counted}}}'
+    if field.type is FieldType.PARTY:
+        return f'{line}. Give it as {{"company", "name", "title", "noticeAddress"}}'
+    return line
+
+
+def _clause_lines(spec: DocumentSpec) -> str:
+    return "\n".join(
+        f"{clause.number} {clause.heading}" for clause in spec.clauses
+    )
+
+
+def build_prompt(spec: DocumentSpec | None) -> str:
+    """The front desk while the document is still open, and the drafting prompt
+    for a document once one is settled."""
+    if spec is None:
+        return FRONT_DESK_PROMPT.format(listing=documents.listing())
+    return DRAFTING_PROMPT.format(
+        title=spec.title,
+        fields="\n".join(_field_line(field) for field in spec.fields),
+        listing=documents.listing(),
+        clauses=_clause_lines(spec),
+    )
+
+
+class FrontDeskTurn(BaseModel):
     reply: str
-    fields: NdaFieldsUpdate
+    document: str | None = None
+
+
+def turn_schema(spec: DocumentSpec | None) -> type[BaseModel]:
+    """What the assistant answers in. Before a document is settled it names one;
+    afterwards it also reports whatever the last message gave."""
+    if spec is None:
+        return FrontDeskTurn
+    fields = update_model(spec.slug, spec.fields)
+    return create_model(
+        "".join(part.title() for part in spec.slug.split("-")) + "Turn",
+        reply=(str, ...),
+        document=(str | None, None),
+        fields=(fields, fields()),
+    )
 
 
 def build_messages(
-    fields: NdaDetails, history: list[ChatEntry], message: str
+    spec: DocumentSpec | None,
+    fields: dict,
+    history: list[ChatEntry],
+    message: str,
 ) -> list[dict[str, str]]:
-    return [
-        {"role": "system", "content": SYSTEM_PROMPT},
+    known = [] if spec is None else [
         {
             "role": "system",
-            "content": f"Fields already established: {fields.model_dump_json()}",
-        },
+            "content": f"Fields already established: {fields}",
+        }
+    ]
+    return [
+        {"role": "system", "content": build_prompt(spec)},
+        *known,
         *(
             {"role": entry.role, "content": entry.content}
             for entry in history[-config.MAX_CHAT_HISTORY :]
