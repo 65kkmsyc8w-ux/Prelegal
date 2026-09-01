@@ -262,6 +262,32 @@ body {
   letter-spacing: 0.04em;
 }
 
+/* A turn takes between 30 seconds and two and a half minutes, which is long
+   enough that a disabled button alone reads as a page that has stopped. */
+.waiting {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.waiting::after {
+  content: "";
+  animation: waiting 1.2s steps(4, end) infinite;
+}
+
+@keyframes waiting {
+  to {
+    content: "....";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting::after {
+    content: "...";
+    animation: none;
+  }
+}
+
 .chat-form label {
   display: block;
   margin-bottom: 0.25rem;

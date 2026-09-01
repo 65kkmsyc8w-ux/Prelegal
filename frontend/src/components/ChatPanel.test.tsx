@@ -147,6 +147,26 @@ describe("ChatPanel", () => {
     );
   });
 
+  it("says it is waiting, because the assistant takes a long time", async () => {
+    let answer: (value: unknown) => void = () => {};
+    sendChatMessage.mockReturnValue(new Promise((resolve) => (answer = resolve)));
+    render(<Harness />);
+    await screen.findByText("What is this agreement for?");
+
+    await say("Delaware law");
+
+    expect(screen.getByRole("status")).toHaveTextContent("Waiting for a reply");
+
+    answer({ reply: "Noted.", fields: emptyNda() });
+    await waitFor(() => expect(screen.queryByRole("status")).not.toBeInTheDocument());
+  });
+
+  it("announces what the assistant says as it arrives", async () => {
+    render(<Harness />);
+
+    expect(await screen.findByRole("list")).toHaveAttribute("aria-live", "polite");
+  });
+
   it("says so when even the greeting cannot be fetched", async () => {
     getGreeting.mockRejectedValue(new TypeError("Failed to fetch"));
     render(<Harness />);

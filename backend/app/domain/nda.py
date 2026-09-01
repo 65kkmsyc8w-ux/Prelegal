@@ -58,14 +58,26 @@ class NdaFieldsUpdate(BaseModel):
 
 
 def _overlay(base: dict, patch: dict) -> dict:
-    return {**base, **{key: value for key, value in patch.items() if value is not None}}
+    return {
+        **base,
+        **{
+            key: value
+            for key, value in patch.items()
+            if value is not None and value != ""
+        },
+    }
 
 
 def merge_fields(current: NdaDetails, update: NdaFieldsUpdate) -> NdaDetails:
     """Lays what the assistant found over what the browser already had. The one
-    place None is read as "not mentioned", so a turn that says nothing about a
-    field leaves it standing. The model is asked to leave untouched fields null
-    but often echoes them back instead, which merges to the same answer.
+    place a missing value is read as "not mentioned", so a turn that says
+    nothing about a field leaves it standing.
+
+    An empty string counts as missing, not as an instruction to clear. The model
+    is asked to leave untouched fields null and often does not: it echoes values
+    back, which merges to the same answer, and it fills fields it knows nothing
+    about with "", which without this would wipe them. The cost is that nothing
+    the assistant says can empty a field once it is set, only replace it.
     """
     held = current.model_dump()
     found = update.model_dump()

@@ -61,7 +61,7 @@ export const ChatPanel = ({ history, details, onExchange }: ChatPanelProps) => {
 
   return (
     <section className="chat" aria-label="Chat">
-      <ol className="transcript">
+      <ol className="transcript" aria-live="polite">
         {history.map((entry, index) => (
           <li key={index} className={entry.role}>
             <span className="who">{entry.role === "user" ? "You" : "Assistant"}</span>
@@ -69,6 +69,12 @@ export const ChatPanel = ({ history, details, onExchange }: ChatPanelProps) => {
           </li>
         ))}
       </ol>
+
+      {sending && (
+        <p className="waiting" role="status">
+          Waiting for a reply. The assistant can take a couple of minutes
+        </p>
+      )}
 
       {error && (
         <p className="error" role="alert">
