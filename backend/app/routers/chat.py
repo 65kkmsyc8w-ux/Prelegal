@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, status
+from pydantic import ValidationError
 
 from app.ai import chat, client
 from app.core.deps import UserDep
@@ -27,8 +28,21 @@ def _blank(spec: DocumentSpec) -> dict:
 
 def _held(spec: DocumentSpec, fields: dict) -> dict:
     """What the browser sent, read as the document's own shape. A field the
-    browser has not seen yet arrives missing and comes back defaulted."""
-    return details_model(spec.slug, spec.fields).model_validate(fields).model_dump()
+    browser has not seen yet arrives missing and comes back defaulted, and a key
+    belonging to no field is dropped.
+
+    Read before the provider is called rather than after. A body that is not the
+    shape the document takes is the caller's mistake, and answering 422 for it
+    costs nothing; finding out after the call would mean a minute or more of
+    waiting and a charge for an answer that could not be used.
+    """
+    try:
+        return details_model(spec.slug, spec.fields).model_validate(fields).model_dump()
+    except ValidationError as cause:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            f"Those fields are not the shape a {spec.title} takes",
+        ) from cause
 
 
 @router.post("/message", response_model=ChatReply)
@@ -37,9 +51,8 @@ def post_message(payload: ChatRequest, _user: UserDep) -> ChatReply:
     fields and sends all three, so there is no transaction open across the
     provider call."""
     spec = documents.resolve(payload.document)
-    messages = chat.build_messages(
-        spec, payload.fields, payload.history, payload.message
-    )
+    held = _held(spec, payload.fields) if spec else {}
+    messages = chat.build_messages(spec, held, payload.history, payload.message)
     try:
         turn = client.complete_structured(messages, chat.turn_schema(spec))
     except client.AiError as cause:
@@ -65,7 +78,5 @@ def post_message(payload: ChatRequest, _user: UserDep) -> ChatReply:
         reply=turn.reply,
         document=spec.slug,
         documentSpec=DocumentOut.of(spec),
-        fields=merge_fields(
-            spec.fields, _held(spec, payload.fields), turn.fields.model_dump()
-        ),
+        fields=merge_fields(spec.fields, held, turn.fields.model_dump()),
     )

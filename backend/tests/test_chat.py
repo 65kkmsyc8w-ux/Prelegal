@@ -173,6 +173,43 @@ def test_a_message_of_nothing_but_spaces_is_refused(signed_in_client):
     assert draft(signed_in_client, "   ").status_code == 422
 
 
+def test_fields_that_are_not_the_documents_shape_are_refused(
+    signed_in_client, ai_turn
+):
+    ai_turn()
+
+    response = draft(signed_in_client, "Hello", fields={"partyOne": "Acme Inc"})
+
+    assert response.status_code == 422
+    assert "Mutual Non-Disclosure Agreement" in response.json()["detail"]
+
+
+def test_refusing_them_costs_nothing_at_the_provider(signed_in_client, monkeypatch):
+    """Read before the call, not after. A turn takes a minute or more and is
+    charged for, so a body that could never be used must not pay for one."""
+
+    def refuse(*_args, **_kwargs):
+        raise AssertionError("a malformed body must not reach the provider")
+
+    monkeypatch.setattr(chat_router.client, "complete_structured", refuse)
+
+    response = draft(signed_in_client, "Hello", fields={"term": "nonsense"})
+
+    assert response.status_code == 422
+
+
+def test_a_key_belonging_to_no_field_is_dropped_rather_than_refused(
+    signed_in_client, ai_turn
+):
+    """A browser holding a key from an earlier shape is not a bad request."""
+    ai_turn(purpose="Evaluating a deal.")
+
+    response = draft(signed_in_client, "Hello", fields={"nonsense": "x"})
+
+    assert response.status_code == 200
+    assert "nonsense" not in response.json()["fields"]
+
+
 def test_a_provider_that_fails_is_reported_as_a_bad_gateway(
     signed_in_client, monkeypatch
 ):
