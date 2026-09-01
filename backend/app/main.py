@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.core import config
 from app.core.db import init_db
-from app.routers import auth, chat
+from app.routers import auth, chat, drafts
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
@@ -29,6 +29,7 @@ def health() -> dict[str, str]:
 
 app.include_router(auth.router)
 app.include_router(chat.router)
+app.include_router(drafts.router)
 
 # Last, and everything that answers under /api goes above it. StaticFiles is
 # mounted at / as a catch-all, so a route registered after this line is

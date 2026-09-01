@@ -4,25 +4,27 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { failureText, signIn } from "@/lib/api";
+import { failureText, signUp } from "@/lib/api";
 
-const LoginPage = () => {
+const SignUpPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [signingIn, setSigningIn] = useState(false);
+  const [registering, setRegistering] = useState(false);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSigningIn(true);
+    setRegistering(true);
     setError(null);
     try {
-      await signIn(email, password);
+      // Registering signs you in, so there is no second step to get wrong.
+      await signUp(email, displayName, password);
       router.replace("/");
     } catch (cause) {
       setError(failureText(cause));
-      setSigningIn(false);
+      setRegistering(false);
     }
   };
 
@@ -30,7 +32,7 @@ const LoginPage = () => {
     <main className="login">
       <form className="form login-card" onSubmit={handleSubmit}>
         <p className="wordmark">Prelegal</p>
-        <h1>Sign in</h1>
+        <h1>Create an account</h1>
         <p className="hint">Draft legal agreements from standard templates.</p>
 
         <label htmlFor="email">Email</label>
@@ -44,15 +46,26 @@ const LoginPage = () => {
           required
         />
 
+        <label htmlFor="display-name">Your name</label>
+        <input
+          id="display-name"
+          value={displayName}
+          onChange={(event) => setDisplayName(event.target.value)}
+          autoComplete="name"
+          required
+        />
+
         <label htmlFor="password">Password</label>
         <input
           id="password"
           type="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          autoComplete="current-password"
+          autoComplete="new-password"
+          minLength={8}
           required
         />
+        <p className="hint">At least eight characters.</p>
 
         {error && (
           <p className="error" role="alert">
@@ -60,16 +73,16 @@ const LoginPage = () => {
           </p>
         )}
 
-        <button type="submit" className="submit" disabled={signingIn}>
-          {signingIn ? "Signing in" : "Sign in"}
+        <button type="submit" className="submit" disabled={registering}>
+          {registering ? "Creating your account" : "Create account"}
         </button>
 
         <p className="auth-switch">
-          New here? <Link href="/signup/">Create an account</Link>
+          Already have an account? <Link href="/login/">Sign in</Link>
         </p>
       </form>
     </main>
   );
 };
 
-export default LoginPage;
+export default SignUpPage;

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { DocumentView } from "@/components/DocumentView";
 import { CLAUSES_BY_SLUG } from "@/content/generated";
+import { DISCLAIMER } from "@/lib/disclaimer";
 import type { DocumentSpec, Fields } from "@/lib/documents";
 
 /** The real declarations, so these tests fail if a spec stops making sense. */
@@ -220,5 +221,20 @@ describe("every agreement", () => {
       screen.getByRole("heading", { level: 1, name: declared.title }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("listitem").length).toBeGreaterThan(0);
+  });
+});
+
+describe("the disclaimer", () => {
+  it("says on the agreement itself that it is a draft", () => {
+    render(<DocumentView spec={NDA} fields={{}} />);
+
+    expect(screen.getByRole("article")).toHaveTextContent(DISCLAIMER);
+  });
+
+  it("keeps it inside the agreement, so it is there when the agreement prints", () => {
+    render(<DocumentView spec={NDA} fields={{}} />);
+
+    expect(screen.getByRole("note")).toBeInTheDocument();
+    expect(screen.getByRole("article")).toContainElement(screen.getByRole("note"));
   });
 });

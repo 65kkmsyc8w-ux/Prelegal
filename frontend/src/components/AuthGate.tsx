@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
+import { AppHeader } from "@/components/AppHeader";
 import { ApiError, me, signOut, type ApiUser } from "@/lib/api";
 
 interface AuthGateProps {
@@ -10,9 +11,9 @@ interface AuthGateProps {
 }
 
 /**
- * Holds the platform behind a session. There is no password yet: signing in
- * only carries a display name, so this decides whether the caller has been
- * through the login screen, not who they have proved themselves to be.
+ * Holds the platform behind a session, and puts the shell around what it lets
+ * through. Deciding who the caller is stays here; drawing the header is
+ * AppHeader's, so every screen inside the platform gets the same one.
  */
 export const AuthGate = ({ children }: AuthGateProps) => {
   const router = useRouter();
@@ -57,12 +58,7 @@ export const AuthGate = ({ children }: AuthGateProps) => {
 
   return (
     <>
-      <div className="session-bar">
-        <span>Signed in as {user.display_name}</span>
-        <button type="button" onClick={endSession}>
-          Sign out
-        </button>
-      </div>
+      <AppHeader user={user} onSignOut={endSession} />
       {children}
     </>
   );

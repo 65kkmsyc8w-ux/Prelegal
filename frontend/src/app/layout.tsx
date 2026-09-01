@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Mutual NDA",
-  description: "Create a Common Paper Mutual Non-Disclosure Agreement.",
+  title: "Prelegal",
+  description: "Draft common legal agreements by talking to an assistant.",
 };
 
 const RootLayout = ({ children }: LayoutProps<"/">) => (

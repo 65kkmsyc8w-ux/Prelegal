@@ -26,6 +26,13 @@ def test_the_login_route_resolves_without_the_trailing_slash(client):
     assert client.get("/login").status_code == 200
 
 
+def test_every_screen_resolves_as_its_own_directory(client):
+    """trailingSlash: true is what makes each of these an index.html the mount
+    finds. A screen added without it 404s on a direct visit."""
+    for screen in ("/login/", "/signup/", "/drafts/"):
+        assert client.get(screen).status_code == 200, screen
+
+
 def test_the_api_is_reachable_past_the_catch_all_mount(client):
     """StaticFiles is mounted at / and answers everything. A route registered
     after it would be unreachable, and this is what would catch that."""

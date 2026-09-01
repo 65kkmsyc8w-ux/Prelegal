@@ -1,19 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
-import {
-  ApiError,
-  getGreeting,
-  sendChatMessage,
-  type ChatEntry,
-} from "@/lib/api";
+import { failureText, sendChatMessage, type ChatEntry } from "@/lib/api";
 import type { DocumentSpec, Fields } from "@/lib/documents";
 
 export interface Drafted {
   document: string | null;
   spec: DocumentSpec | null;
   fields: Fields;
+  /** The saved draft this conversation writes to, once an agreement has been
+   * settled on. The server mints it; this side only carries it back. */
+  draftId: number | null;
 }
 
 interface ChatPanelProps {
@@ -22,27 +20,16 @@ interface ChatPanelProps {
   onExchange: (history: ChatEntry[], drafted: Drafted) => void;
 }
 
-const failureText = (cause: unknown) =>
-  cause instanceof ApiError
-    ? cause.message
-    : "Could not reach the server. Try again.";
-
+/**
+ * The conversation, fully controlled. Which conversation is on screen, and how
+ * one begins, belong to the page: it is the page that knows whether this is a
+ * new draft or one being picked back up.
+ */
 export const ChatPanel = ({ history, drafted, onExchange }: ChatPanelProps) => {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  const opened = useRef(false);
-
-  useEffect(() => {
-    if (opened.current) {
-      return;
-    }
-    opened.current = true;
-    getGreeting()
-      .then(({ reply }) => onExchange([{ role: "assistant", content: reply }], drafted))
-      .catch((cause) => setError(failureText(cause)));
-  }, [drafted, onExchange]);
 
   const send = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -55,11 +42,13 @@ export const ChatPanel = ({ history, drafted, onExchange }: ChatPanelProps) => {
         history,
         drafted.document,
         drafted.fields,
+        drafted.draftId,
       );
       onExchange([...history, asked, { role: "assistant", content: answer.reply }], {
         document: answer.document,
         spec: answer.documentSpec,
         fields: answer.fields,
+        draftId: answer.draftId,
       });
       setDraft("");
     } catch (cause) {

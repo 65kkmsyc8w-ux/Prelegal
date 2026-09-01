@@ -9,6 +9,12 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
 SESSION_MAX_AGE = 60 * 60 * 24 * 7
 
 MAX_DISPLAY_NAME = 60
+# The longest address RFC 5321 allows.
+MAX_EMAIL = 254
+MIN_PASSWORD = 8
+# Long enough for any passphrase, short enough that scrypt cannot be made to
+# chew through a megabyte of input on an unauthenticated route.
+MAX_PASSWORD = 128
 
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.environ.get(

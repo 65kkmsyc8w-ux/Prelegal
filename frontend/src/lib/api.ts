@@ -2,6 +2,7 @@ import type { DocumentSpec, Fields } from "@/lib/documents";
 
 export interface ApiUser {
   id: number;
+  email: string;
   display_name: string;
 }
 
@@ -14,6 +15,14 @@ export class ApiError extends Error {
     this.name = "ApiError";
   }
 }
+
+/** What to show the reader when a call fails: the server's own reason where
+ * there is one, and otherwise the only thing that can be said about a request
+ * that never got an answer. */
+export const failureText = (cause: unknown) =>
+  cause instanceof ApiError
+    ? cause.message
+    : "Could not reach the server. Try again.";
 
 const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   const response = await fetch(`/api${path}`, {
@@ -36,10 +45,16 @@ const request = async <T>(path: string, init?: RequestInit): Promise<T> => {
   return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
 };
 
-export const createSession = (displayName: string) =>
+export const signUp = (email: string, displayName: string, password: string) =>
+  request<ApiUser>("/auth/signup", {
+    method: "POST",
+    body: JSON.stringify({ email, display_name: displayName, password }),
+  });
+
+export const signIn = (email: string, password: string) =>
   request<ApiUser>("/auth/session", {
     method: "POST",
-    body: JSON.stringify({ display_name: displayName }),
+    body: JSON.stringify({ email, password }),
   });
 
 export const signOut = () => request<void>("/auth/signout", { method: "POST" });
@@ -58,6 +73,9 @@ export interface ChatReply {
   document: string | null;
   documentSpec: DocumentSpec | null;
   fields: Fields;
+  /** The draft this turn was saved into. Null while nothing has been settled
+   * on, because nothing is saved before then. */
+  draftId: number | null;
 }
 
 export const getGreeting = () => request<{ reply: string }>("/chat/greeting");
@@ -67,8 +85,28 @@ export const sendChatMessage = (
   history: ChatEntry[],
   document: string | null,
   fields: Fields,
+  draftId: number | null,
 ) =>
   request<ChatReply>("/chat/message", {
     method: "POST",
-    body: JSON.stringify({ message, history, document, fields }),
+    body: JSON.stringify({ message, history, document, fields, draftId }),
   });
+
+/** One card in the library. The title is resolved by the server: the browser
+ * holds a slug but not what it is called. */
+export interface DraftSummary {
+  id: number;
+  document: string;
+  title: string;
+  updatedAt: string;
+}
+
+export interface DraftDetail extends DraftSummary {
+  documentSpec: DocumentSpec;
+  fields: Fields;
+  transcript: ChatEntry[];
+}
+
+export const listDrafts = () => request<DraftSummary[]>("/drafts");
+
+export const getDraft = (id: number) => request<DraftDetail>(`/drafts/${id}`);

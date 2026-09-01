@@ -4,14 +4,14 @@ A platform for drafting common legal agreements.
 
 ## Status
 
-**In progress.** The project is under active development and is targeted for
-completion by **7 September 2026**.
+**V1 complete**, ahead of its target of 7 September 2026.
 
-The Mutual NDA creator is the first drafting tool to land. It runs inside the
-full V1 foundation, a FastAPI backend and a SQLite database in a Docker
-container serving the built frontend, and it is driven by a conversation with an
-assistant rather than a form. The remaining ten document types and real
-authentication are still to come.
+All eleven Common Paper agreements can be drafted by talking to an assistant
+rather than filling in a form, and the agreement builds beside the conversation
+as it goes. Accounts are an email and a password, and every conversation that
+settles on an agreement is saved and can be reopened later. It runs as one
+Docker container: a FastAPI backend and a SQLite database serving the built
+frontend.
 
 ## Running it
 
@@ -39,12 +39,13 @@ stay up is reported as a failure rather than as a URL nothing is listening on.
 
 ## Signing in
 
-The login screen asks for a display name and nothing else. **There is no
-authentication yet**: no password is taken and nothing is verified. Signing in
-under a name already used returns to that same account.
+Sign up with an email, your name and a password, and you are signed in straight
+away. Coming back takes the email and the password. Passwords are hashed with
+scrypt and never stored or returned.
 
 The database is rebuilt from scratch on every container start. Nothing mounts a
-volume, so accounts and the work under them last only as long as the container.
+volume, so accounts and the drafts under them last only as long as the
+container. That is by design: the ticket asks for a temporary database.
 
 ## Architecture
 
@@ -54,18 +55,31 @@ and the resulting `out/` is copied into a `python:3.13-slim` image as
 `/`. There is no Node at runtime and no second origin, so the frontend calls
 `/api/...` directly with no CORS layer and no proxy.
 
-`backend/` is a uv project laid out as `routers -> domain -> core`; see
+`backend/` is a uv project laid out as `routers -> ai -> domain -> core`; see
 [backend/AGENTS.md](backend/AGENTS.md) for its invariants. `frontend/` is the
-Next.js app. NDA drafting is entirely client-side: the backend holds accounts
-and nothing else yet.
+Next.js app, and the eleven agreements are declared in `documents/` and rendered
+from one declaration the server sends.
 
-## Mutual NDA creator
+## Drafting an agreement
 
-Tell the assistant what you need. It asks about the agreement a couple of points
-at a time and fills in the cover page as you answer, and the agreement builds
-beside the conversation, the cover page and the Standard Terms together.
-Anything not yet settled shows as a placeholder in square brackets. Download
-opens the browser print dialog; choose Save as PDF to keep a copy.
+Tell the assistant what you need. If it is not one of the eleven, it says so and
+offers the nearest one it can draft. Once an agreement is settled on it asks
+about it a couple of points at a time and fills in the cover page as you answer,
+and the agreement builds beside the conversation, the cover page and the terms
+together. Anything not yet settled shows as a placeholder in square brackets.
+Download opens the browser print dialog; choose Save as PDF to keep a copy.
+
+Every document Prelegal produces is a draft. The app says so on screen and on
+the agreement itself, so the warning is in the PDF too: no lawyer has reviewed
+it, and one should before it is signed or relied on.
+
+## Your drafts
+
+Each turn that settles on an agreement is saved under your account, with the
+conversation and the cover page as they stand. **My drafts** lists them, and
+opening one puts you back in the conversation where you left it, so you carry on
+talking rather than starting again. A reload comes back to the draft too. A
+container restart does not: the database goes with it.
 
 The assistant runs on a free model and is slow: a turn takes between 30 seconds
 and two and a half minutes. It occasionally answers with nothing at all, which
@@ -98,9 +112,9 @@ live tests instead:
 docker run --rm --env-file .env prelegal-test pytest -m live --no-cov
 ```
 
- Start it first, then run the suite; set
-`E2E_BASE_URL` to point somewhere other than `http://localhost:4000`. The
-browsers install once with `npx playwright install`.
+Start the container first, then run the suite. Set `E2E_BASE_URL` to point
+somewhere other than `http://localhost:4000`. The browsers install once with
+`npx playwright install`.
 
 [docs/manual-tests.md](docs/manual-tests.md) lists what the suites cannot
 reach, chiefly the browser's own print dialog and the saved PDF.

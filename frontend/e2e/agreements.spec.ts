@@ -2,12 +2,14 @@ import { expect, test } from "@playwright/test";
 
 import {
   A_DRAFT,
+  A_SAVED_DRAFT,
   drafting,
   say,
-  signIn,
+  signUp,
   spec,
   stubChat,
   stubChatFailure,
+  stubDrafts,
   undecided,
 } from "./support";
 
@@ -20,7 +22,7 @@ const HALF_WAY = {
 const PILOT = spec("pilot-agreement");
 
 test.beforeEach(async ({ page }) => {
-  await signIn(page);
+  await signUp(page);
 });
 
 test("opens on the conversation, with no agreement chosen yet", async ({ page }) => {
@@ -182,7 +184,8 @@ test.describe("printing", () => {
     await expect(page.locator(".chat-column")).toBeHidden();
     await expect(page.locator(".document-toolbar")).toBeHidden();
     await expect(page.locator(".masthead")).toBeHidden();
-    await expect(page.locator(".session-bar")).toBeHidden();
+    await expect(page.locator(".app-bar")).toBeHidden();
+    await expect(page.locator(".disclaimer-banner")).toBeHidden();
     await expect(page.getByRole("article")).toBeVisible();
   });
 
@@ -195,6 +198,14 @@ test.describe("printing", () => {
     await expect(agreement).toContainText("the laws of the State of Delaware");
     await expect(agreement).toContainText("Ada Lovelace");
     await expect(agreement).toContainText("free to use under CC BY 4.0");
+  });
+
+  test("prints the warning that it is a draft", async ({ page }) => {
+    // The PDF is the copy that leaves the building, so it is the one that most
+    // needs to say no lawyer has read it.
+    await expect(page.getByRole("article")).toContainText(
+      "no lawyer has reviewed it",
+    );
   });
 
   test("writes a PDF holding the whole agreement", async ({
@@ -232,16 +243,30 @@ test("the download button asks the browser to print", async ({ page }) => {
   ).toBe(1);
 });
 
-test("keeps the draft in the browser, with nothing carried across a reload", async ({
-  page,
-}) => {
+test("comes back to the draft after a reload", async ({ page }) => {
   await stubChat(page, [drafting("Noted.", A_DRAFT)]);
+  await stubDrafts(page, [A_SAVED_DRAFT]);
   await page.goto("/");
   await say(page, "Everything, please.");
   await expect(page.getByRole("article")).toContainText("Acme Inc");
+  // The first saved turn puts the draft in the address, which is what a reload
+  // has to go on.
+  await expect(page).toHaveURL(/\?draft=1$/);
 
   await page.reload();
 
+  await expect(page.getByRole("article")).toContainText("Acme Inc");
+  await expect(page.getByText("That is everything.")).toBeVisible();
+});
+
+test("starts empty when nothing has been settled on to save", async ({ page }) => {
+  await stubChat(page, [undecided("Which of these did you mean?")]);
+  await page.goto("/");
+  await say(page, "Something legal.");
+
+  await page.reload();
+
+  await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("article")).toBeHidden();
   await expect(page.getByText(/settled on which agreement/)).toBeVisible();
 });
