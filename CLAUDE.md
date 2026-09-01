@@ -92,7 +92,9 @@ no saved documents and no real authentication.
 - Next.js static export building a Common Paper Mutual NDA from a form
 - Live preview: the cover page and the Standard Terms build as the user types
 - Download opens the browser print dialog; Save as PDF keeps a copy
-- The Standard Terms are transcribed into `frontend/src/content/standard-terms.ts`
+- The Standard Terms were transcribed by hand into
+  `frontend/src/content/standard-terms.ts`. PL-7 replaced that file with clauses
+  generated from the template.
 
 ### Completed (PL-5)
 
@@ -107,7 +109,8 @@ no saved documents and no real authentication.
   password and no authentication. Signing in under a name already used returns
   to that same account.
 - Start and stop scripts for Mac, Linux and Windows.
-- Product features are unchanged. NDA drafting is still entirely client-side.
+- Product features were unchanged by this ticket. NDA drafting was still
+  entirely client-side at this point; PL-6 moved it to the chat.
 
 ### Completed (PL-6)
 
@@ -136,6 +139,10 @@ no saved documents and no real authentication.
   are generated from `templates/<slug>.md` by
   `frontend/scripts/generate-clauses.mjs` (`npm run generate`), and committed.
 - One renderer serves all eleven, driven by the declaration the server sends.
+- `catalog.json` is now read at runtime and copied into the image: it is where
+  each document's description comes from, and so what the front desk offers.
+  `templates/` is still read only by the generator and still never enters the
+  image.
 
 ### Not built yet
 
@@ -146,24 +153,29 @@ no saved documents and no real authentication.
 - `GET /api/health` - health check, used by the start scripts
 - `GET /api/chat/greeting` - the assistant's opening line, no provider call
 - `POST /api/chat/message` - one turn of the conversation, 502 if the model
-  fails. Carries `document` and `fields`; answers with the document settled on,
-  its declaration, and the merged fields
+  fails, 422 if `fields` are not the shape `document` takes. Carries `document`
+  and `fields`; answers with the document settled on, its declaration, and the
+  merged fields
 - `POST /api/auth/session` - sign in under a display name, sets the session cookie
 - `POST /api/auth/signout` - clear the session cookie
 - `GET /api/auth/me` - the signed-in user, 401 when there is no session
 
 ## Invariants
 
-Each of these has a regression test behind it.
+Each of these has a regression test behind it, except the two marked below,
+which are documented but not yet pinned.
 
 - **`main.py` route order.** `StaticFiles` is mounted at `/` as a catch-all. Any
   route registered after the mount is unreachable.
 - **`trailingSlash: true`** in `next.config.ts`, or the export writes `login.html`
   rather than `login/index.html` and `StaticFiles` 404s a direct visit to `/login/`.
-- **Services flush, routers commit.** `domain/users.py` mutates and flushes; the
-  router owns the transaction.
+- **Services flush, routers commit.** `domain/users.py` writes inside a
+  savepoint rather than committing; the router owns the transaction. *No test
+  pins this: nothing fails if a service starts committing.*
 - **`core/db.py` `DATA_DIR` is `parents[2]`**, not `parent.parent`. The wrong
-  offset puts the database inside the app package.
+  offset puts the database inside the app package. *No test pins this, and the
+  suites cannot catch it: they never run the lifespan, so nothing opens the real
+  database file.*
 - **A session cookie can outlive the account it names**, because the database is
   rebuilt on every start. `current_user` answers 401 for it.
 - **`merge_fields` reads a missing value as "not mentioned", never as "clear
@@ -178,6 +190,9 @@ Each of these has a regression test behind it.
   naming none, so a hallucinated document costs a turn rather than a 500.
 - **Changing document mid-conversation empties the cover page**, because field
   keys belong to the document they were gathered for.
+- **Fields are read before the provider is called.** A body that is not the
+  shape the document takes is a 422, not a 500, and costs no call. A turn takes
+  a minute or more and is charged for, so finding out afterwards wastes both.
 - **The chat prompt names every clause of every document**, pinned by a test,
   because nothing reads `templates/*.md` at runtime. A second test re-runs the
   generator and fails if the committed output has drifted from the templates.
@@ -200,7 +215,8 @@ frontend/
   src/components/  AuthGate, ChatPanel, DocumentView
   src/lib/      api.ts (the one API client), documents.ts (the spec shape),
                 fields.ts (how a field reads once filled)
-  src/content/generated/   the terms, generated from templates/
+  src/content/  clause.ts (the generated shape),
+                generated/ (the terms, generated from templates/)
 ```
 
 `frontend/AGENTS.md` is written by `next dev` itself, not by hand. It is real,
