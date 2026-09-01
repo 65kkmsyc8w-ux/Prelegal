@@ -1,0 +1,134 @@
+{
+  "slug": "software-license-agreement",
+  "title": "Software License Agreement",
+  "shortName": "Software License Agreement",
+  "source": "https://commonpaper.com/standards/software-license-agreement/1.0",
+  "preamble": "This Software License Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Software License Agreement Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Software License Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "subscriptionPeriod",
+      "label": "Subscription Period",
+      "type": "text",
+      "prompt": "the subscription period the agreement names"
+    },
+    {
+      "key": "permittedUses",
+      "label": "Permitted Uses",
+      "type": "text",
+      "prompt": "the permitted uses the agreement names"
+    },
+    {
+      "key": "effectiveDate",
+      "label": "Effective Date",
+      "type": "date",
+      "prompt": "the effective date, as yyyy-mm-dd"
+    },
+    {
+      "key": "licenseLimits",
+      "label": "License Limits",
+      "type": "text",
+      "prompt": "the license limits the agreement names"
+    },
+    {
+      "key": "paymentProcess",
+      "label": "Payment Process",
+      "type": "text",
+      "prompt": "the payment process the agreement names"
+    },
+    {
+      "key": "orderDate",
+      "label": "Order Date",
+      "type": "date",
+      "prompt": "the order date, as yyyy-mm-dd"
+    },
+    {
+      "key": "nonRenewalNoticeDate",
+      "label": "Non-Renewal Notice Date",
+      "type": "date",
+      "prompt": "the non-renewal notice date, as yyyy-mm-dd"
+    },
+    {
+      "key": "deletionProcedure",
+      "label": "Deletion Procedure",
+      "type": "text",
+      "prompt": "the deletion procedure the agreement names"
+    },
+    {
+      "key": "additionalWarranties",
+      "label": "Additional Warranties",
+      "type": "text",
+      "prompt": "the additional warranties the agreement names"
+    },
+    {
+      "key": "warrantyPeriod",
+      "label": "Warranty Period",
+      "type": "text",
+      "prompt": "the warranty period the agreement names"
+    },
+    {
+      "key": "generalCapAmount",
+      "label": "General Cap Amount",
+      "type": "money",
+      "prompt": "the general cap amount, as an amount"
+    },
+    {
+      "key": "increasedClaims",
+      "label": "Increased Claims",
+      "type": "text",
+      "prompt": "the increased claims the agreement names"
+    },
+    {
+      "key": "increasedCapAmount",
+      "label": "Increased Cap Amount",
+      "type": "money",
+      "prompt": "the increased cap amount, as an amount"
+    },
+    {
+      "key": "unlimitedClaims",
+      "label": "Unlimited Claims",
+      "type": "text",
+      "prompt": "the unlimited claims the agreement names"
+    },
+    {
+      "key": "providerCoveredClaim",
+      "label": "Provider Covered Claim",
+      "type": "text",
+      "prompt": "the provider covered claim the agreement names"
+    },
+    {
+      "key": "customerCoveredClaim",
+      "label": "Customer Covered Claim",
+      "type": "text",
+      "prompt": "the customer covered claim the agreement names"
+    },
+    {
+      "key": "governingLaw",
+      "label": "Governing Law",
+      "type": "text",
+      "prompt": "the governing law the agreement names"
+    },
+    {
+      "key": "chosenCourts",
+      "label": "Chosen Courts",
+      "type": "text",
+      "prompt": "the chosen courts the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

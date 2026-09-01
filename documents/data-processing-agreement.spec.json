@@ -1,0 +1,98 @@
+{
+  "slug": "data-processing-agreement",
+  "title": "Data Processing Agreement",
+  "shortName": "DPA",
+  "source": "https://commonpaper.com/standards/dpa/1.0",
+  "preamble": "This Data Processing Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Data Processing Agreement Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Data Processing Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "categoriesOfPersonalData",
+      "label": "Categories of Personal Data",
+      "type": "text",
+      "prompt": "the categories of personal data the agreement names"
+    },
+    {
+      "key": "categoriesOfDataSubjects",
+      "label": "Categories of Data Subjects",
+      "type": "text",
+      "prompt": "the categories of data subjects the agreement names"
+    },
+    {
+      "key": "agreement",
+      "label": "Agreement",
+      "type": "text",
+      "prompt": "the agreement the agreement names"
+    },
+    {
+      "key": "specialCategoryData",
+      "label": "Special Category Data",
+      "type": "text",
+      "prompt": "the special category data the agreement names"
+    },
+    {
+      "key": "specialCategoryDataRestrictionsOrSafeguards",
+      "label": "Special Category Data Restrictions or Safeguards",
+      "type": "text",
+      "prompt": "the special category data restrictions or safeguards the agreement names"
+    },
+    {
+      "key": "frequencyOfTransfer",
+      "label": "Frequency of Transfer",
+      "type": "text",
+      "prompt": "the frequency of transfer the agreement names"
+    },
+    {
+      "key": "natureAndPurposeOfProcessing",
+      "label": "Nature and Purpose of Processing",
+      "type": "text",
+      "prompt": "the nature and purpose of processing the agreement names"
+    },
+    {
+      "key": "durationOfProcessing",
+      "label": "Duration of Processing",
+      "type": "text",
+      "prompt": "the duration of processing the agreement names"
+    },
+    {
+      "key": "approvedSubprocessors",
+      "label": "Approved Subprocessors",
+      "type": "text",
+      "prompt": "the approved subprocessors the agreement names"
+    },
+    {
+      "key": "governingMemberState",
+      "label": "Governing Member State",
+      "type": "text",
+      "prompt": "the governing member state the agreement names"
+    },
+    {
+      "key": "securityPolicy",
+      "label": "Security Policy",
+      "type": "text",
+      "prompt": "the security policy the agreement names"
+    },
+    {
+      "key": "providerSecurityContact",
+      "label": "Provider Security Contact",
+      "type": "text",
+      "prompt": "the provider security contact the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

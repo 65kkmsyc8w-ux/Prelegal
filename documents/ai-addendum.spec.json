@@ -1,0 +1,50 @@
+{
+  "slug": "ai-addendum",
+  "title": "AI Addendum",
+  "shortName": "AI Addendum",
+  "source": "https://commonpaper.com/standards/ai-addendum/1.0",
+  "preamble": "This AI Addendum (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper AI Addendum Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper AI Addendum (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "trainingData",
+      "label": "Training Data",
+      "type": "text",
+      "prompt": "the training data the agreement names"
+    },
+    {
+      "key": "trainingPurposes",
+      "label": "Training Purposes",
+      "type": "text",
+      "prompt": "the training purposes the agreement names"
+    },
+    {
+      "key": "trainingRestrictions",
+      "label": "Training Restrictions",
+      "type": "text",
+      "prompt": "the training restrictions the agreement names"
+    },
+    {
+      "key": "improvementRestrictions",
+      "label": "Improvement Restrictions",
+      "type": "text",
+      "prompt": "the improvement restrictions the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

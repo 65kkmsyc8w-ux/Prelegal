@@ -1,0 +1,105 @@
+{
+  "slug": "mutual-nda",
+  "title": "Mutual Non-Disclosure Agreement",
+  "shortName": "Mutual NDA",
+  "source": "https://commonpaper.com/standards/mutual-nda/1.0",
+  "preamble": "This Mutual Non-Disclosure Agreement (the “MNDA”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Mutual NDA Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this MNDA as of the Effective Date.",
+  "attribution": "Common Paper Mutual Non-Disclosure Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "purpose",
+      "label": "Purpose",
+      "hint": "How Confidential Information may be used",
+      "type": "text",
+      "prompt": "what the parties will use each other's confidential information for"
+    },
+    {
+      "key": "effectiveDate",
+      "label": "Effective Date",
+      "type": "date",
+      "prompt": "the date it takes effect, as yyyy-mm-dd"
+    },
+    {
+      "key": "term",
+      "label": "MNDA Term",
+      "hint": "The length of this MNDA",
+      "type": "duration",
+      "prompt": "how long the MNDA lasts: \"expires\" after a set number of years, or \"untilTerminated\"",
+      "modes": [
+        {
+          "value": "expires",
+          "label": "Expires after a set period",
+          "countedInYears": true,
+          "template": "Expires {years} from the Effective Date."
+        },
+        {
+          "value": "untilTerminated",
+          "label": "Continues until terminated",
+          "countedInYears": false,
+          "template": "Continues until terminated in accordance with the terms of this MNDA."
+        }
+      ]
+    },
+    {
+      "key": "confidentiality",
+      "label": "Term of Confidentiality",
+      "hint": "How long Confidential Information is protected",
+      "type": "duration",
+      "prompt": "how long confidentiality lasts: a number of \"years\", or \"perpetual\"",
+      "modes": [
+        {
+          "value": "years",
+          "label": "A set number of years",
+          "countedInYears": true,
+          "template": "{years} from the Effective Date, but in the case of trade secrets until the Confidential Information is no longer considered a trade secret under applicable laws."
+        },
+        {
+          "value": "perpetual",
+          "label": "In perpetuity",
+          "countedInYears": false,
+          "template": "In perpetuity."
+        }
+      ]
+    },
+    {
+      "key": "governingLaw",
+      "label": "Governing Law",
+      "type": "text",
+      "inline": true,
+      "prompt": "the state whose law governs"
+    },
+    {
+      "key": "jurisdiction",
+      "label": "Jurisdiction",
+      "type": "text",
+      "inline": true,
+      "prompt": "the city or county and state whose courts hear disputes"
+    },
+    {
+      "key": "modifications",
+      "label": "MNDA Modifications",
+      "type": "text",
+      "whenBlank": "None.",
+      "prompt": "any change to the standard terms, otherwise leave it alone"
+    },
+    {
+      "key": "partyOne",
+      "label": "Party 1",
+      "type": "party",
+      "prompt": "the first party: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "partyTwo",
+      "label": "Party 2",
+      "type": "party",
+      "prompt": "the second party: company, name and title of whoever signs, and noticeAddress"
+    }
+  ],
+  "inlineOccurrences": [
+    { "clause": "Governing Law and Jurisdiction", "label": "Governing Law", "occurrence": 1, "key": "governingLaw" },
+    { "clause": "Governing Law and Jurisdiction", "label": "Jurisdiction", "occurrence": 1, "key": "jurisdiction" }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "slug": "business-associate-agreement",
+  "title": "Business Associate Agreement",
+  "shortName": "BAA",
+  "source": "https://commonpaper.com/standards/baa/1.0",
+  "preamble": "This Business Associate Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Business Associate Agreement Standard Terms Version 1.0 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Business Associate Agreement (Version 1.0) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "company",
+      "label": "Company",
+      "type": "party",
+      "prompt": "the company: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "limitations",
+      "label": "Limitations",
+      "type": "text",
+      "prompt": "the limitations the agreement names"
+    },
+    {
+      "key": "breachNotificationPeriod",
+      "label": "Breach Notification Period",
+      "type": "text",
+      "prompt": "the breach notification period the agreement names"
+    },
+    {
+      "key": "baaEffectiveDate",
+      "label": "BAA Effective Date",
+      "type": "date",
+      "prompt": "the baa effective date, as yyyy-mm-dd"
+    },
+    {
+      "key": "agreement",
+      "label": "Agreement",
+      "type": "text",
+      "prompt": "the agreement the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}

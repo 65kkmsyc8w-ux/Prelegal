@@ -1,0 +1,128 @@
+{
+  "slug": "cloud-service-agreement",
+  "title": "Cloud Service Agreement",
+  "shortName": "CSA",
+  "source": "https://commonpaper.com/standards/cloud-service-agreement/2.1",
+  "preamble": "This Cloud Service Agreement (the “Agreement”) consists of: (1) this Cover Page (“Cover Page”) and (2) the Common Paper Cloud Service Agreement Standard Terms Version 2.1 (“Standard Terms”) identical to those posted at {source}. Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+  "coverPageHeading": "Cover Page",
+  "termsHeading": "Standard Terms",
+  "closing": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+  "attribution": "Common Paper Cloud Service Agreement (Version 2.1) free to use under CC BY 4.0.",
+  "fields": [
+    {
+      "key": "customer",
+      "label": "Customer",
+      "type": "party",
+      "prompt": "the customer: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "provider",
+      "label": "Provider",
+      "type": "party",
+      "prompt": "the provider: company, name and title of whoever signs, and noticeAddress"
+    },
+    {
+      "key": "subscriptionPeriod",
+      "label": "Subscription Period",
+      "type": "text",
+      "prompt": "the subscription period the agreement names"
+    },
+    {
+      "key": "technicalSupport",
+      "label": "Technical Support",
+      "type": "text",
+      "prompt": "the technical support the agreement names"
+    },
+    {
+      "key": "useLimitations",
+      "label": "Use Limitations",
+      "type": "text",
+      "prompt": "the use limitations the agreement names"
+    },
+    {
+      "key": "dpa",
+      "label": "DPA",
+      "type": "text",
+      "prompt": "the dpa the agreement names"
+    },
+    {
+      "key": "paymentProcess",
+      "label": "Payment Process",
+      "type": "text",
+      "prompt": "the payment process the agreement names"
+    },
+    {
+      "key": "orderDate",
+      "label": "Order Date",
+      "type": "date",
+      "prompt": "the order date, as yyyy-mm-dd"
+    },
+    {
+      "key": "nonRenewalNoticeDate",
+      "label": "Non-Renewal Notice Date",
+      "type": "date",
+      "prompt": "the non-renewal notice date, as yyyy-mm-dd"
+    },
+    {
+      "key": "effectiveDate",
+      "label": "Effective Date",
+      "type": "date",
+      "prompt": "the effective date, as yyyy-mm-dd"
+    },
+    {
+      "key": "additionalWarranties",
+      "label": "Additional Warranties",
+      "type": "text",
+      "prompt": "the additional warranties the agreement names"
+    },
+    {
+      "key": "generalCapAmount",
+      "label": "General Cap Amount",
+      "type": "money",
+      "prompt": "the general cap amount, as an amount"
+    },
+    {
+      "key": "increasedClaims",
+      "label": "Increased Claims",
+      "type": "text",
+      "prompt": "the increased claims the agreement names"
+    },
+    {
+      "key": "increasedCapAmount",
+      "label": "Increased Cap Amount",
+      "type": "money",
+      "prompt": "the increased cap amount, as an amount"
+    },
+    {
+      "key": "unlimitedClaims",
+      "label": "Unlimited Claims",
+      "type": "text",
+      "prompt": "the unlimited claims the agreement names"
+    },
+    {
+      "key": "providerCoveredClaim",
+      "label": "Provider Covered Claim",
+      "type": "text",
+      "prompt": "the provider covered claim the agreement names"
+    },
+    {
+      "key": "customerCoveredClaim",
+      "label": "Customer Covered Claim",
+      "type": "text",
+      "prompt": "the customer covered claim the agreement names"
+    },
+    {
+      "key": "governingLaw",
+      "label": "Governing Law",
+      "type": "text",
+      "prompt": "the governing law the agreement names"
+    },
+    {
+      "key": "chosenCourts",
+      "label": "Chosen Courts",
+      "type": "text",
+      "prompt": "the chosen courts the agreement names"
+    }
+  ],
+  "inlineOccurrences": []
+}
