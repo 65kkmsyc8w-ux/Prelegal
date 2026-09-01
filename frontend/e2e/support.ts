@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 
 export interface DraftDetails {
   purpose: string;
@@ -45,4 +45,16 @@ export const fillDraft = async (page: Page, draft: DraftDetails = A_DRAFT) => {
     await fields.getByLabel("Title", { exact: true }).fill(party.title);
     await fields.getByLabel("Notice address", { exact: true }).fill(party.address);
   }
+};
+
+/**
+ * Signs in and lands on the platform. There is no password yet: the login
+ * screen only carries a name, and signing in under a name already used returns
+ * to that same account, so a repeated run adds no rows.
+ */
+export const signIn = async (page: Page, name = "e2e") => {
+  await page.goto("/login/");
+  await page.getByLabel("Your name").fill(name);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByText(`Signed in as ${name}`)).toBeVisible();
 };

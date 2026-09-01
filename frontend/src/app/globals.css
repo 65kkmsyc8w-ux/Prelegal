@@ -6,6 +6,16 @@
   --paper: #ffffff;
   --accent: #1f4f82;
   --accent-strong: #163a61;
+
+  /* The Prelegal palette, used by the platform chrome around the document.
+     The NDA form and the agreement keep the colours above: Blue Primary
+     behind white Download text is 2.9:1, where the current accent is 8:1.
+     Gray Text #888888 is left out for the same reason: on either background
+     it reads at about 3.4:1, and --muted above already carries small text. */
+  --brand-yellow: #ecad0a;
+  --brand-blue: #209dd7;
+  --brand-purple: #753991;
+  --brand-navy: #032147;
 }
 
 * {
@@ -236,6 +246,97 @@ body {
   overflow: hidden;
 }
 
+/* Platform chrome */
+
+.session-bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background: var(--brand-navy);
+  padding: 0.5rem 2rem;
+  color: var(--paper);
+  font-size: 0.85rem;
+}
+
+.session-bar button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--brand-yellow);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.session-bar button:focus-visible {
+  outline: 2px solid var(--brand-yellow);
+  outline-offset: 2px;
+}
+
+.notice {
+  padding: 3rem 2rem;
+  color: var(--muted);
+}
+
+.notice .error {
+  margin: 0;
+}
+
+/* Login */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 22rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--paper);
+  padding: 1.75rem;
+}
+
+.login-card h1 {
+  margin: 0;
+  color: var(--brand-navy);
+  font-size: 1.5rem;
+}
+
+.login-card .submit {
+  width: 100%;
+  margin-top: 1.25rem;
+  border: none;
+  border-radius: 3px;
+  background: var(--brand-purple);
+  padding: 0.7rem;
+  color: var(--paper);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-card .submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.login-card .submit:focus-visible,
+.login-card input:focus-visible {
+  outline: 2px solid var(--brand-blue);
+  outline-offset: 1px;
+}
+
+.error {
+  margin: 1rem 0 0;
+  color: var(--brand-purple);
+  font-size: 0.85rem;
+}
+
 /* Print: the agreement alone, without the page around it */
 
 @page {
@@ -247,6 +348,7 @@ body {
     background: var(--paper);
   }
 
+  .session-bar,
   .masthead,
   .form-column {
     display: none;

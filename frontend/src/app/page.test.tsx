@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import Home from "@/app/page";
+import { Home } from "@/app/page";
 
 const setup = () => {
   render(<Home />);
