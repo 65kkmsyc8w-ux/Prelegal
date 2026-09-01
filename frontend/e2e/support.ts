@@ -1,15 +1,12 @@
 import { expect, type Page } from "@playwright/test";
 
-export interface DraftDetails {
-  purpose: string;
-  effectiveDate: string;
-  governingLaw: string;
-  jurisdiction: string;
-  partyOne: { company: string; name: string; title: string; address: string };
-  partyTwo: { company: string; name: string; title: string; address: string };
-}
+import { emptyNda, type NdaDetails } from "../src/lib/nda";
 
-export const A_DRAFT: DraftDetails = {
+export const GREETING = "What is this agreement for, and who are the two parties?";
+
+/** A cover page with nothing left to settle. */
+export const A_DRAFT: NdaDetails = {
+  ...emptyNda(),
   purpose: "Evaluating a supply arrangement.",
   effectiveDate: "2026-08-31",
   governingLaw: "Delaware",
@@ -18,33 +15,55 @@ export const A_DRAFT: DraftDetails = {
     company: "Acme Inc",
     name: "Ada Lovelace",
     title: "CEO",
-    address: "ada@acme.example",
+    noticeAddress: "ada@acme.example",
   },
   partyTwo: {
     company: "Beta Ltd",
     name: "Grace Hopper",
     title: "CTO",
-    address: "grace@beta.example",
+    noticeAddress: "grace@beta.example",
   },
 };
 
-/** Fills the whole form, the way a user completing an agreement would. */
-export const fillDraft = async (page: Page, draft: DraftDetails = A_DRAFT) => {
-  await page.getByLabel("Purpose", { exact: true }).fill(draft.purpose);
-  await page.getByLabel("Effective date", { exact: true }).fill(draft.effectiveDate);
-  await page.getByLabel("Governing law", { exact: true }).fill(draft.governingLaw);
-  await page.getByLabel("Jurisdiction", { exact: true }).fill(draft.jurisdiction);
+export interface Answer {
+  reply: string;
+  fields: NdaDetails;
+}
 
-  for (const [legend, party] of [
-    ["Party 1", draft.partyOne],
-    ["Party 2", draft.partyTwo],
-  ] as const) {
-    const fields = page.getByRole("group", { name: legend });
-    await fields.getByLabel("Company", { exact: true }).fill(party.company);
-    await fields.getByLabel("Print name", { exact: true }).fill(party.name);
-    await fields.getByLabel("Title", { exact: true }).fill(party.title);
-    await fields.getByLabel("Notice address", { exact: true }).fill(party.address);
-  }
+/**
+ * Answers the chat routes from the test rather than from the model. The suite
+ * runs against the real container, and a real model call would be slow, cost
+ * money and say something different every run. What the model actually does
+ * with a message is covered by the backend's live tests instead.
+ */
+export const stubChat = async (page: Page, answers: Answer[]) => {
+  await page.route("**/api/chat/greeting", (route) =>
+    route.fulfill({ json: { reply: GREETING } }),
+  );
+
+  let asked = 0;
+  await page.route("**/api/chat/message", (route) => {
+    const answer = answers[Math.min(asked, answers.length - 1)];
+    asked += 1;
+    return route.fulfill({ json: answer });
+  });
+};
+
+/** Answers every message with a failure, to exercise the error path. */
+export const stubChatFailure = async (page: Page) => {
+  await page.route("**/api/chat/greeting", (route) =>
+    route.fulfill({ json: { reply: GREETING } }),
+  );
+  await page.route("**/api/chat/message", (route) =>
+    route.fulfill({ status: 502, json: { detail: "The AI answered with nothing" } }),
+  );
+};
+
+/** Says something to the assistant and waits for the answer to land. */
+export const say = async (page: Page, message: string) => {
+  await page.getByLabel("Your message").fill(message);
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByText(message, { exact: true })).toBeVisible();
 };
 
 /**

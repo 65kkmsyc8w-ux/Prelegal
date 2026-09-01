@@ -1,6 +1,9 @@
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.core.config import MAX_DISPLAY_NAME
+from app.core.config import MAX_CHAT_MESSAGE, MAX_DISPLAY_NAME
+from app.domain.nda import NdaDetails
 
 
 class SessionRequest(BaseModel):
@@ -16,3 +19,25 @@ class UserOut(BaseModel):
 
     id: int
     display_name: str
+
+
+class ChatEntry(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class ChatRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    message: str = Field(min_length=1, max_length=MAX_CHAT_MESSAGE)
+    history: list[ChatEntry] = []
+    fields: NdaDetails = NdaDetails()
+
+
+class ChatReply(BaseModel):
+    reply: str
+    fields: NdaDetails
+
+
+class GreetingReply(BaseModel):
+    reply: str

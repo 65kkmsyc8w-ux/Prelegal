@@ -4,14 +4,17 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.core import config
 from app.core.db import init_db
-from app.routers import auth
+from app.routers import auth, chat
 
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    if not config.OPENROUTER_API_KEY:
+        raise RuntimeError("OPENROUTER_API_KEY is not set. Add it to .env.")
     init_db()
     yield
 
@@ -25,6 +28,7 @@ def health() -> dict[str, str]:
 
 
 app.include_router(auth.router)
+app.include_router(chat.router)
 
 # Last, and everything that answers under /api goes above it. StaticFiles is
 # mounted at / as a catch-all, so a route registered after this line is

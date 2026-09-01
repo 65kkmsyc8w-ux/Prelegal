@@ -1,62 +1,90 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { Home } from "@/app/page";
+import { emptyNda } from "@/lib/nda";
 
-const setup = () => {
-  render(<Home />);
-  return {
-    user: userEvent.setup(),
-    document: () => screen.getByRole("article").textContent ?? "",
-  };
+const { getGreeting, sendChatMessage } = vi.hoisted(() => ({
+  getGreeting: vi.fn(),
+  sendChatMessage: vi.fn(),
+}));
+
+vi.mock("@/lib/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/api")>()),
+  getGreeting,
+  sendChatMessage,
+}));
+
+const agreement = () => screen.getByRole("article").textContent ?? "";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  getGreeting.mockResolvedValue({ reply: "What is this agreement for?" });
+});
+
+const say = async (message: string) => {
+  await userEvent.type(screen.getByLabelText("Your message"), message);
+  await userEvent.click(screen.getByRole("button", { name: "Send" }));
 };
 
 describe("the page", () => {
-  it("shows the form and the agreement together", () => {
-    setup();
-    expect(screen.getByRole("group", { name: "The agreement" })).toBeInTheDocument();
+  it("shows the conversation and the agreement together", async () => {
+    render(<Home />);
+
+    expect(await screen.findByText("What is this agreement for?")).toBeInTheDocument();
     expect(screen.getByRole("article")).toBeInTheDocument();
   });
 
-  it("writes what the user types into the agreement", async () => {
-    const { user, document } = setup();
-    expect(document()).toContain("[Governing Law]");
+  it("writes what the assistant gathered into the agreement", async () => {
+    sendChatMessage.mockResolvedValue({
+      reply: "Noted.",
+      fields: { ...emptyNda(), governingLaw: "Delaware" },
+    });
+    render(<Home />);
+    await screen.findByText("What is this agreement for?");
+    expect(agreement()).toContain("[Governing Law]");
 
-    await user.type(screen.getByLabelText("Governing law"), "Delaware");
+    await say("Delaware law");
 
-    expect(document()).toContain("the laws of the State of Delaware");
-    expect(document()).not.toContain("[Governing Law]");
+    expect(agreement()).toContain("the laws of the State of Delaware");
+    expect(agreement()).not.toContain("[Governing Law]");
   });
 
   it("carries a party's company into the signature table", async () => {
-    const { user } = setup();
-    const party = within(screen.getByRole("group", { name: "Party 1" }));
-    await user.type(party.getByLabelText("Company"), "Acme Inc");
+    const fields = emptyNda();
+    fields.partyOne.company = "Acme Inc";
+    sendChatMessage.mockResolvedValue({ reply: "Noted.", fields });
+    render(<Home />);
+    await screen.findByText("What is this agreement for?");
+
+    await say("We are Acme Inc");
 
     expect(screen.getByRole("columnheader", { name: "Acme Inc" })).toBeInTheDocument();
   });
 
-  it("rewrites the term when the user changes how long the MNDA lasts", async () => {
-    const { user, document } = setup();
-    expect(document()).toContain("Expires 1 year from the Effective Date.");
+  it("rewrites the term when the assistant settles how long the MNDA lasts", async () => {
+    sendChatMessage.mockResolvedValue({
+      reply: "Noted.",
+      fields: { ...emptyNda(), termKind: "untilTerminated" as const },
+    });
+    render(<Home />);
+    await screen.findByText("What is this agreement for?");
+    expect(agreement()).toContain("Expires 1 year from the Effective Date.");
 
-    await user.click(
-      within(screen.getByRole("group", { name: "MNDA term" })).getByRole("radio", {
-        name: "Continues until terminated",
-      }),
-    );
+    await say("It should run until we terminate it");
 
-    expect(document()).toContain("Continues until terminated");
-    expect(document()).not.toContain("Expires 1 year");
+    expect(agreement()).toContain("Continues until terminated");
+    expect(agreement()).not.toContain("Expires 1 year");
   });
 
   it("prints when the user asks to download", async () => {
     const print = vi.fn();
     vi.stubGlobal("print", print);
-    const { user } = setup();
+    render(<Home />);
+    await screen.findByText("What is this agreement for?");
 
-    await user.click(screen.getByRole("button", { name: "Download PDF" }));
+    await userEvent.click(screen.getByRole("button", { name: "Download PDF" }));
 
     expect(print).toHaveBeenCalledOnce();
     vi.unstubAllGlobals();

@@ -9,3 +9,12 @@ SESSION_SECRET = os.environ.get("SESSION_SECRET") or secrets.token_hex(32)
 SESSION_MAX_AGE = 60 * 60 * 24 * 7
 
 MAX_DISPLAY_NAME = 60
+
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_MODEL = os.environ.get(
+    "OPENROUTER_MODEL", "nvidia/nemotron-3.5-lightning:free"
+)
+
+MAX_CHAT_MESSAGE = 2000
+# What is forwarded to the model, however long the browser's transcript grows.
+MAX_CHAT_HISTORY = 40

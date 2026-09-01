@@ -8,12 +8,18 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 cd "$ROOT"
 
+if ! grep -q '^OPENROUTER_API_KEY=.' .env 2>/dev/null; then
+  echo "OPENROUTER_API_KEY is missing from .env. Copy .env.example and fill it in." >&2
+  exit 1
+fi
+
 docker build -t "$IMAGE" .
 docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 
 # No volume. The database is built inside the container, so removing and
 # recreating it here is what gives every start a database from scratch.
-docker run -d --name "$CONTAINER" -p "$PORT:8000" "$IMAGE" >/dev/null
+docker run -d --name "$CONTAINER" -p "$PORT:8000" \
+  --env-file .env "$IMAGE" >/dev/null
 
 # docker run -d exits 0 once the container is created, which says nothing about
 # whether it stayed up. Without this the script announces an address that

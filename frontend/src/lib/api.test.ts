@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ApiError, createSession, me, signOut } from "@/lib/api";
+import {
+  ApiError,
+  createSession,
+  getGreeting,
+  me,
+  sendChatMessage,
+  signOut,
+} from "@/lib/api";
+import { emptyNda } from "@/lib/nda";
 
 const respondWith = (status: number, body: unknown) =>
   vi.fn().mockResolvedValue({
@@ -65,5 +73,41 @@ describe("the api client", () => {
     );
 
     expect(await signOut()).toBeUndefined();
+  });
+});
+
+describe("the chat client", () => {
+  it("fetches the assistant's opening line", async () => {
+    vi.stubGlobal("fetch", respondWith(200, { reply: "Hello" }));
+
+    expect(await getGreeting()).toEqual({ reply: "Hello" });
+    expect(lastCall()[0]).toBe("/api/chat/greeting");
+  });
+
+  it("sends the message, the thread and the fields so far", async () => {
+    vi.stubGlobal(
+      "fetch",
+      respondWith(200, { reply: "Noted.", fields: emptyNda() }),
+    );
+    const history = [{ role: "assistant" as const, content: "Hello" }];
+
+    await sendChatMessage("Delaware law", history, emptyNda());
+
+    const [path, init] = lastCall();
+    expect(path).toBe("/api/chat/message");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body)).toEqual({
+      message: "Delaware law",
+      history,
+      fields: emptyNda(),
+    });
+  });
+
+  it("reports a provider failure with the reason the backend gave", async () => {
+    vi.stubGlobal("fetch", respondWith(502, { detail: "The AI answered with nothing" }));
+
+    await expect(sendChatMessage("Hi", [], emptyNda())).rejects.toThrow(
+      "The AI answered with nothing",
+    );
   });
 });

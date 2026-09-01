@@ -7,14 +7,17 @@ A platform for drafting common legal agreements.
 **In progress.** The project is under active development and is targeted for
 completion by **7 September 2026**.
 
-The Mutual NDA creator is the first drafting tool to land, and it now runs
-inside the full V1 foundation: a FastAPI backend, a SQLite database and a
-Docker container serving the built frontend. AI chat, the remaining ten
-document types and real authentication are still to come.
+The Mutual NDA creator is the first drafting tool to land. It runs inside the
+full V1 foundation, a FastAPI backend and a SQLite database in a Docker
+container serving the built frontend, and it is driven by a conversation with an
+assistant rather than a form. The remaining ten document types and real
+authentication are still to come.
 
 ## Running it
 
-Docker is the only requirement; nothing else is installed on the host.
+Docker is the only requirement; nothing else is installed on the host. Copy
+`.env.example` to `.env` and fill in `OPENROUTER_API_KEY` first: the backend
+refuses to start without it, because the chat has nothing to talk to.
 
 ```bash
 # Mac
@@ -58,10 +61,15 @@ and nothing else yet.
 
 ## Mutual NDA creator
 
-Fill in the cover page and the agreement builds as you type, the cover page and
-the Standard Terms together, alongside the form. Anything left blank shows as a
-placeholder in square brackets. Download opens the browser print dialog; choose
-Save as PDF to keep a copy.
+Tell the assistant what you need. It asks about the agreement a couple of points
+at a time and fills in the cover page as you answer, and the agreement builds
+beside the conversation, the cover page and the Standard Terms together.
+Anything not yet settled shows as a placeholder in square brackets. Download
+opens the browser print dialog; choose Save as PDF to keep a copy.
+
+The assistant runs on a free model and is slow: a turn takes between 30 seconds
+and two and a half minutes. It occasionally answers with nothing at all, which
+the backend retries once before reporting it.
 
 ## Tests
 
@@ -81,7 +89,16 @@ npm run test:e2e        # end to end, needs a running container
 ```
 
 `npm run test:e2e` drives the real container rather than a dev server, because
-the app now needs the API behind it. Start it first, then run the suite; set
+the app now needs the API behind it. It answers the chat routes from the test
+rather than from the model, so no end to end run is slow, costly or different
+each time; what the model does with a real message is covered by the backend's
+live tests instead:
+
+```bash
+docker run --rm --env-file .env prelegal-test pytest -m live --no-cov
+```
+
+ Start it first, then run the suite; set
 `E2E_BASE_URL` to point somewhere other than `http://localhost:4000`. The
 browsers install once with `npx playwright install`.
 
@@ -90,9 +107,11 @@ reach, chiefly the browser's own print dialog and the saved PDF.
 
 ## Frontend development
 
-`next dev` serves the frontend alone, with no API behind it, so the login screen
-and the session gate cannot work there. Use it for styling and component work;
-use the container for anything that signs in.
+`next dev` serves the frontend alone, with no API behind it, so the login
+screen, the session gate and the chat cannot work there. Use it for styling and
+component work; use the container for anything that signs in or talks to the
+assistant. Rebuild the container after a frontend change, since it serves the
+built export rather than the source.
 
 ```bash
 cd frontend

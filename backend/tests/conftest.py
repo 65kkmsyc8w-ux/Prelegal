@@ -4,9 +4,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.ai import chat
 from app.core.db import get_session
 from app.domain.models import Base
 from app.main import app
+from app.routers import chat as chat_router
 
 
 @pytest.fixture
@@ -43,3 +45,21 @@ def signed_in_client(client):
     response = client.post("/api/auth/session", json={"display_name": "Ada"})
     assert response.status_code == 200
     return client
+
+
+@pytest.fixture
+def ai_turn(monkeypatch):
+    """Stubs the provider with a fixed structured turn, so no test in the
+    default run reaches OpenRouter."""
+
+    def set_turn(reply="Noted.", **fields):
+        turn = chat.ChatTurn.model_validate({"reply": reply, "fields": fields})
+        monkeypatch.setattr(
+            chat_router.client,
+            "complete_structured",
+            lambda *_args, **_kwargs: turn,
+        )
+        return turn
+
+    return set_turn
+
