@@ -8,7 +8,9 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation supports all 11 document types via AI chat with full user authentication and document persistence.
+The Mutual NDA is the one document type built so far, drafted through AI chat.
+Sign-in is a display name and nothing else, and nothing is saved: the other ten
+types are PL-7, real authentication and saved documents are PL-8.
 
 ## Development process
 
@@ -31,7 +33,9 @@ setting travels in `extra_body` instead; without it the answer comes back empty.
 `backend/AGENTS.md` records both, along with the empty-answer retry they made
 necessary.
 
-There is an OPENROUTER_API_KEY in the .env file in the project root.
+There is an OPENROUTER_API_KEY in the .env file in the project root, and the
+backend now refuses to start without it. `.env.example` is the tracked copy to
+start from; `.env` itself is never committed.
 
 ## Technical design
 
@@ -66,11 +70,17 @@ Backend available at http://localhost:4000
 - Dark Navy: `#032147` (headings)
 - Gray Text: `#888888`
 
+Two of these are deliberately not used, for contrast. White on Blue Primary is
+3.06:1 and Gray Text on white is 3.5:1, both short of the 4.5:1 WCAG AA asks
+for, so the agreement and the form keep the darker `--accent` (8.4:1) and
+`--muted`. The palette carries the platform chrome, where Navy and Purple hold
+up. The reasoning sits in `globals.css` beside the tokens.
+
 ## Implementation Status
 
-Jira PL-2 and PL-3 are done. PL-5 is the current ticket; PL-6, PL-7 and PL-8
-are not started, so there is no AI chat, no document persistence and no real
-authentication in the codebase yet.
+Jira PL-2, PL-3, PL-5 and PL-6 are merged to `main`. PL-7 and PL-8 are not
+started, so there is still only one document type, no saved documents and no
+real authentication.
 
 ### Completed (PL-2)
 
@@ -142,9 +152,65 @@ Each of these has a regression test behind it.
   offset puts the database inside the app package.
 - **A session cookie can outlive the account it names**, because the database is
   rebuilt on every start. `current_user` answers 401 for it.
-- **`merge_fields` reads None as "not mentioned", never as "clear it".** A turn
-  that says nothing about a field leaves the value standing.
+- **`merge_fields` reads a missing value as "not mentioned", never as "clear
+  it".** A turn that says nothing about a field leaves the value standing. An
+  empty string counts as missing too: the model fills fields it knows nothing
+  about with `""`, which would otherwise wipe an answer given turns earlier.
+- **The cover page field names are pinned by a test.** `domain/nda.py` mirrors
+  `frontend/src/lib/nda.ts` by hand and the two are only ever sent to each
+  other, so renaming one side has to fail rather than drift.
 - **The chat prompt names all eleven clauses**, pinned by a test, because
   nothing reads `templates/mutual-nda.md` at runtime.
 - **Frontend test contract.** The suites assert on accessible names, roles and
   text, never `data-testid`. Check before any restyle.
+
+## Where the code lives
+
+```
+backend/app/    routers -> ai -> domain -> core, dependencies one way only
+  core/         config, engine, session cookie, the auth dependency
+  domain/       models, schemas, the user upsert, the NDA shape and its merge
+  ai/           the provider client and the chat prompt
+  routers/      one module per resource, all mounted under /api
+frontend/src/
+  app/          page.tsx (chat beside the document), login/, globals.css
+  components/   AuthGate, ChatPanel, NdaDocument
+  lib/          api.ts (the one API client), nda.ts (the shape), fill.ts
+  content/      standard-terms.ts, the eleven clauses transcribed by hand
+```
+
+`frontend/AGENTS.md` is written by `next dev` itself, not by hand. It is real,
+it is committed, and it gets re-created if deleted. Leave it alone.
+
+## Running and testing it
+
+Copy `.env.example` to `.env` and fill in `OPENROUTER_API_KEY` first: the
+backend refuses to start without it.
+
+```bash
+./scripts/start-mac.sh                                    # http://localhost:4000
+docker build --target test -t prelegal-test . && \
+  docker run --rm -e OPENROUTER_API_KEY=stub prelegal-test   # backend, 80% gate
+docker run --rm --env-file .env prelegal-test pytest -m live --no-cov
+cd frontend && npm test && npm run lint && npm run test:e2e
+```
+
+The end to end suite drives the running container, not `next dev`, and answers
+the chat routes from the test with `page.route`. `next dev` serves the frontend
+with no API behind it, so the login screen, the session gate and the chat cannot
+work there. **Rebuild the container after any frontend change**: it serves the
+built export, not the source.
+
+Run `npx next build` before trusting a frontend change. A CSS syntax error
+passes both `tsc` and vitest and only fails there.
+
+## Known caveats
+
+- **The assistant is slow.** A turn takes 30 to 150 seconds on the free model; a
+  measured round trip was 82 seconds. The UI has a live region and a waiting
+  status because of it.
+- **The provider sometimes answers with nothing**, with `finish_reason` "stop"
+  rather than a truncation, so a larger token budget does not help. One retry
+  does, and a second empty answer surfaces as a 502.
+- **Nothing survives a reload.** The transcript and the draft live in the
+  browser, and the database is rebuilt on every container start.
