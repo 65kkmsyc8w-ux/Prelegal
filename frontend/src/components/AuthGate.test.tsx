@@ -1,14 +1,19 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AuthGate } from "@/components/AuthGate";
 import { ApiError } from "@/lib/api";
+import { DISCLAIMER } from "@/lib/disclaimer";
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 const { me, signOut } = vi.hoisted(() => ({ me: vi.fn(), signOut: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace }) }));
+// AppHeader marks the screen you are on, so the gate needs a path too.
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ replace }),
+  usePathname: () => "/",
+}));
 
 // Spread the real module so ApiError stays the class AuthGate checks against.
 vi.mock("@/lib/api", async (importOriginal) => ({
@@ -17,7 +22,7 @@ vi.mock("@/lib/api", async (importOriginal) => ({
   signOut,
 }));
 
-const ada = { id: 1, display_name: "Ada" };
+const ada = { id: 1, email: "ada@example.com", display_name: "Ada" };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -81,5 +86,28 @@ describe("AuthGate", () => {
 
     expect(signOut).toHaveBeenCalledOnce();
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/login/"));
+  });
+
+  it("puts the platform's own navigation around what it lets through", async () => {
+    me.mockResolvedValue(ada);
+    renderGate();
+
+    const nav = within(await screen.findByRole("navigation", { name: "Primary" }));
+    expect(nav.getByRole("link", { name: "New document" })).toBeInTheDocument();
+    expect(nav.getByRole("link", { name: "My drafts" })).toBeInTheDocument();
+  });
+
+  it("warns that what is drafted here is a draft", async () => {
+    me.mockResolvedValue(ada);
+    renderGate();
+
+    expect(await screen.findByRole("note")).toHaveTextContent(DISCLAIMER);
+  });
+
+  it("shows none of the chrome to someone still being checked", () => {
+    me.mockReturnValue(new Promise(() => {}));
+    renderGate();
+
+    expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
   });
 });

@@ -11,7 +11,8 @@ Four packages, and the dependencies only point one way:
 routers -> ai -> domain -> core
 ```
 
-`core` holds config, the engine, the session cookie and the auth dependency.
+`core` holds config, the engine, the session cookie, password hashing and the
+auth dependency.
 `domain` holds the models, the schemas, the mutations and the document shapes.
 `ai` holds the provider client and the chat prompt. `routers` holds one module
 per resource, each mounted under `/api`.
@@ -51,14 +52,47 @@ Each has a test behind it.
   above that line. `test_static.py` holds it.
 - **`DATA_DIR` is `parents[2]`** from `app/core/db.py`, which is `/app/data`.
   `parent.parent` is `/app/app`, inside the app package.
-- **`domain/` flushes, routers commit.** `sign_in` mutates and flushes and the
-  router owns the transaction.
+- **`domain/` flushes, routers commit.** `sign_up` and `save_turn` mutate and
+  flush; the router owns the transaction.
 - **A session cookie can outlive the account it names.** The database is rebuilt
   on every container start but the browser keeps its cookie, so `current_user`
   looks the row up and answers 401 when it is gone rather than trusting the
   signature alone.
-- **The name on a session is stripped before it is validated**, so a name of
-  nothing but spaces is a 422 rather than an account with a blank name.
+- **The name on a sign up is stripped before it is validated**, so a name of
+  nothing but spaces is a 422 rather than an account with a blank name. The
+  email is stripped and lower cased for the same reason: a stray space or a
+  capital is the same account. The password is neither. It is stored and
+  compared exactly as typed, and trimming it on the way in but not on the way
+  back would lock out anyone whose password ends in a space.
+- **Sign in gives one answer for two failures.** An unregistered email and a
+  wrong password are the same 401 with the same message, so the route cannot be
+  used to find out which addresses have accounts. `test_auth.py` asserts the two
+  messages are equal rather than asserting each separately.
+- **The loser of a sign-up race is refused, not signed in.** The old name-based
+  login coalesced a race into one account, because a name was all there was to
+  go on. Two sign ups under one email may carry different passwords, so handing
+  the loser the winner's row would sign them in to somebody else's account. It
+  gets a 409.
+- **No transaction is open across the OpenRouter call.** This survived the chat
+  becoming stateful, but it is now true by mechanism rather than by having no
+  database access at all: `routers/chat.py` resolves the caller and checks the
+  draft, then commits, and only then asks the provider. A SELECT alone opens a
+  transaction holding SQLite's shared lock, and a turn takes 30 to 150 seconds,
+  so anything else wanting to commit in that window would wait out the 10 second
+  busy timeout and fail. `test_drafts.py` pins it by asking the session whether
+  it is in a transaction at the moment the provider is called.
+- **The draft's owner is checked before the provider is called**, alongside the
+  fields, and for the same reason: a stale tab costs a 404 rather than a minute
+  of waiting and a charge for an answer nothing can use.
+- **A draft answers 404 to anyone but its owner**, reading and writing alike, so
+  nothing confirms which draft ids exist.
+- **Nothing is saved until a document is settled on.** A front desk exchange
+  that never settles leaves no row, and a turn the provider failed leaves none
+  either, so the library holds drafts rather than abandoned openings.
+- **`save_turn` never merges.** Every turn carries its whole state already, so
+  persisting it is a wholesale overwrite of `document`, `fields` and
+  `transcript`. Two turns racing on one draft are last write wins by row rather
+  than a torn write.
 - **`merge_fields` reads None as "the message did not mention it"**, never as
   "clear it". A turn that says nothing about a field leaves it standing. The
   model is asked to leave untouched fields null but often echoes them back
@@ -74,8 +108,10 @@ Each has a test behind it.
   `clauses` out: the browser has them already, generated from the same
   templates, and the longer agreements would put several thousand words on the
   wire every turn.
-- **The chat stores nothing.** The browser holds the transcript and the fields
-  and sends both, so no transaction is open across the provider call.
+- **The browser still sends the whole state every turn**, the transcript and
+  the fields both. It is no longer the only copy, but it is still what the turn
+  is computed from, which is what makes saving an overwrite rather than a
+  read-modify-write.
 - **`test_chat_prompt.py` pins every clause heading of every document.**
   Nothing reads `templates/*.md` at runtime and they are not copied into the
   image, so that test is what keeps the generated clauses honest on this side.
@@ -98,10 +134,16 @@ Do not add these back without a reason that exists in the code.
 - **No `BEGIN IMMEDIATE` or `isolation_level = None`.** That guards ordered
   read-modify-write, which this schema has none of. Revisit when a later ticket
   adds rows whose order matters.
-- **No password hashing.** PL-5 is a fake login by instruction. PL-8 adds real
-  authentication, and `core/security.py` is where it goes.
-- **No chat persistence.** PL-8 adds saved documents; until then a reload starts
-  a new conversation, and the container holds nothing to lose.
+- **No password hashing library.** `hashlib.scrypt` is in the standard library
+  and is a memory-hard KDF; the cost parameters in `core/security.py` are
+  Django's `ScryptPasswordHasher` defaults rather than invented ones. bcrypt and
+  argon2-cffi are both compiled extensions, and this backend is six packages.
+- **No email validation library.** `pydantic[email]` pulls in email-validator to
+  check deliverability, and nothing here posts mail. `domain/schemas.py` checks
+  the shape, which is what stops a display name being typed into the address box.
+- **No `BEGIN IMMEDIATE` still.** The chat now writes, but `save_turn` is a
+  wholesale overwrite rather than an ordered read-modify-write, so there is
+  still nothing whose order a concurrent writer could corrupt.
 
 ## What the provider actually does
 

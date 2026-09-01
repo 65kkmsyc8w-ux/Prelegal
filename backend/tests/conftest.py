@@ -9,6 +9,8 @@ from app.domain.models import Base
 from app.main import app
 from app.routers import chat as chat_router
 
+PASSWORD = "opensesame"
+
 
 @pytest.fixture
 def session_factory():
@@ -40,10 +42,30 @@ def client(session_factory):
 
 
 @pytest.fixture
-def signed_in_client(client):
-    response = client.post("/api/auth/session", json={"display_name": "Ada"})
-    assert response.status_code == 200
-    return client
+def signed_in_as(client):
+    """Opens an account and hands back a client carrying its session. A second
+    call gives a second account with its own cookie jar, which is what the
+    ownership tests need."""
+
+    def open_account(email="ada@example.com", display_name="Ada"):
+        caller = TestClient(app)
+        response = caller.post(
+            "/api/auth/signup",
+            json={
+                "email": email,
+                "display_name": display_name,
+                "password": PASSWORD,
+            },
+        )
+        assert response.status_code == 201
+        return caller
+
+    return open_account
+
+
+@pytest.fixture
+def signed_in_client(signed_in_as):
+    return signed_in_as()
 
 
 @pytest.fixture
@@ -62,4 +84,3 @@ def ai_turn(monkeypatch):
         monkeypatch.setattr(chat_router.client, "complete_structured", answer)
 
     return set_turn
-

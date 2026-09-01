@@ -1,4 +1,5 @@
 import { CLAUSES_BY_SLUG } from "@/content/generated";
+import { DISCLAIMER } from "@/lib/disclaimer";
 import type { Clause } from "@/content/clause";
 import {
   fieldText,
@@ -139,6 +140,12 @@ export const DocumentView = ({ spec, fields }: DocumentViewProps) => {
           {spec.preamble.split("{source}")[1]}
         </p>
       )}
+
+      {/* Inside the article, so the print stylesheet carries it into the PDF
+          along with everything else the agreement says. */}
+      <p className="document-disclaimer" role="note">
+        {DISCLAIMER}
+      </p>
 
       <h2>{spec.coverPageHeading}</h2>
 

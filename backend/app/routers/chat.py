@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 from pydantic import ValidationError
+from sqlalchemy.orm import Session
 
 from app.ai import chat, client
-from app.core.deps import UserDep
-from app.domain import documents
+from app.core.deps import SessionDep, UserDep
+from app.domain import documents, drafts
 from app.domain.documents import DocumentSpec
 from app.domain.fields import details_model, merge_fields
+from app.domain.models import User
 from app.domain.schemas import (
     ChatReply,
     ChatRequest,
@@ -45,13 +47,32 @@ def _held(spec: DocumentSpec, fields: dict) -> dict:
         ) from cause
 
 
+def _owned(session: Session, user: User, draft_id: int | None) -> None:
+    """Refuses a draft this caller cannot write to, for the same reason the
+    fields are checked here: before the provider is called, so a stale tab costs
+    a 404 rather than a minute of waiting and a charge."""
+    if draft_id is not None and drafts.find_owned(session, user, draft_id) is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No such draft")
+
+
 @router.post("/message", response_model=ChatReply)
-def post_message(payload: ChatRequest, _user: UserDep) -> ChatReply:
-    """Nothing is stored. The browser holds the transcript, the document and the
-    fields and sends all three, so there is no transaction open across the
-    provider call."""
+def post_message(
+    payload: ChatRequest, user: UserDep, session: SessionDep
+) -> ChatReply:
+    """One turn: everything that can be refused for free is refused first, then
+    the provider is asked, then the outcome is saved."""
     spec = documents.resolve(payload.document)
     held = _held(spec, payload.fields) if spec else {}
+    _owned(session, user, payload.draftId)
+
+    # Nothing has been written, but resolving the caller and checking the draft
+    # both read, and a SELECT alone opens a transaction that holds SQLite's
+    # shared lock until it is closed. The provider call takes 30 to 150 seconds,
+    # and any other request wanting to commit in that window would wait out the
+    # busy timeout and fail. Closing it here is what keeps no transaction open
+    # across the round trip now that this route writes at all.
+    session.commit()
+
     messages = chat.build_messages(spec, held, payload.history, payload.message)
     try:
         turn = client.complete_structured(messages, chat.turn_schema(spec))
@@ -62,21 +83,32 @@ def post_message(payload: ChatRequest, _user: UserDep) -> ChatReply:
     # as naming none: carry on with whatever was already being drafted.
     chosen = documents.resolve(turn.document) or spec
     if chosen is None:
+        # Still at the front desk. Nothing is saved until an agreement is
+        # settled on, so the library holds drafts rather than abandoned
+        # openings.
         return ChatReply(reply=turn.reply)
 
     if spec is None or chosen.slug != spec.slug:
         # A document has just been settled on, or swapped for another. Field
         # keys belong to the document they were gathered for, so none carry over.
-        return ChatReply(
-            reply=turn.reply,
-            document=chosen.slug,
-            documentSpec=DocumentOut.of(chosen),
-            fields=_blank(chosen),
-        )
+        fields = _blank(chosen)
+    else:
+        fields = merge_fields(spec.fields, held, turn.fields.model_dump())
+
+    transcript = [
+        *(entry.model_dump() for entry in payload.history),
+        {"role": "user", "content": payload.message},
+        {"role": "assistant", "content": turn.reply},
+    ]
+    draft = drafts.save_turn(
+        session, user, payload.draftId, chosen.slug, fields, transcript
+    )
+    session.commit()
 
     return ChatReply(
         reply=turn.reply,
-        document=spec.slug,
-        documentSpec=DocumentOut.of(spec),
-        fields=merge_fields(spec.fields, held, turn.fields.model_dump()),
+        document=chosen.slug,
+        documentSpec=DocumentOut.of(chosen),
+        fields=fields,
+        draftId=draft.id,
     )

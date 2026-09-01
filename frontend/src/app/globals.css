@@ -1,4 +1,6 @@
 :root {
+  /* The document's own colours. This surface is the artefact, not the chrome:
+     it is what prints, so it keeps the darker, higher contrast pair. */
   --ink: #1a1a1a;
   --muted: #5c5c5c;
   --line: #d4d4d4;
@@ -8,7 +10,7 @@
   --accent-strong: #163a61;
 
   /* The Prelegal palette, used by the platform chrome around the document.
-     The NDA form and the agreement keep the colours above: white on Blue
+     The agreement and the auth forms keep the colours above: white on Blue
      Primary is 3.06:1, where white on the current accent is 8.4:1, and AA
      wants 4.5:1. Gray Text #888888 is left out for the same reason, reading
      3.5:1 on white, and --muted above already carries the small text. */
@@ -16,6 +18,28 @@
   --brand-blue: #209dd7;
   --brand-purple: #753991;
   --brand-navy: #032147;
+
+  /* What each brand colour is for. Every pairing below is at or above 4.5:1
+     except --focus, which only ever draws an outline: WCAG asks 3:1 of a user
+     interface component, and Blue Primary on white is 3.06:1.
+       white on navy    16.0:1     the bar
+       yellow on navy    8.0:1     links and the current screen in the bar
+       white on purple   7.6:1     every button that submits */
+  --shell: var(--brand-navy);
+  --shell-ink: var(--paper);
+  --shell-accent: var(--brand-yellow);
+  --cta: var(--brand-purple);
+  --cta-strong: #5d2d74;
+  --focus: var(--brand-blue);
+
+  /* The disclaimer strip. Tinted from the accent yellow, with ordinary ink on
+     it, because yellow is a colour to be looked at rather than read. */
+  --warn-ground: #fdf3d7;
+  --warn-line: #e6c76a;
+
+  --radius: 6px;
+  --radius-lg: 10px;
+  --lift: 0 1px 2px rgb(3 33 71 / 6%), 0 1px 8px rgb(3 33 71 / 6%);
 }
 
 * {
@@ -30,6 +54,79 @@ body {
   line-height: 1.5;
 }
 
+/* Platform chrome */
+
+.app-bar {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  background: var(--shell);
+  padding: 0.7rem 2rem;
+  color: var(--shell-ink);
+  font-size: 0.9rem;
+}
+
+.wordmark {
+  color: var(--shell-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+}
+
+.app-bar nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.app-bar nav a {
+  border-bottom: 2px solid transparent;
+  padding-bottom: 0.15rem;
+  color: var(--shell-ink);
+  text-decoration: none;
+}
+
+.app-bar nav a:hover {
+  border-bottom-color: var(--shell-accent);
+}
+
+.app-bar nav a[aria-current="page"] {
+  border-bottom-color: var(--shell-accent);
+  color: var(--shell-accent);
+  font-weight: 600;
+}
+
+.app-bar-session {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-left: auto;
+}
+
+.app-bar-session button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--shell-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.app-bar a:focus-visible,
+.app-bar-session button:focus-visible {
+  outline: 2px solid var(--shell-accent);
+  outline-offset: 3px;
+}
+
+.disclaimer-banner {
+  margin: 0;
+  border-bottom: 1px solid var(--warn-line);
+  background: var(--warn-ground);
+  padding: 0.55rem 2rem;
+  font-size: 0.8rem;
+}
+
 .masthead {
   border-bottom: 1px solid var(--line);
   background: var(--paper);
@@ -38,7 +135,9 @@ body {
 
 .masthead h1 {
   margin: 0 0 0.25rem;
+  color: var(--brand-navy);
   font-size: 1.35rem;
+  letter-spacing: -0.01em;
 }
 
 .masthead p {
@@ -59,11 +158,21 @@ body {
   min-width: 0;
 }
 
-/* Form, now only the login card */
+.notice {
+  padding: 3rem 2rem;
+  color: var(--muted);
+}
+
+.notice .error,
+.notice p {
+  margin: 0 0 0.75rem;
+}
+
+/* Forms, shared by the two auth screens */
 
 .form label {
   display: block;
-  margin: 0.75rem 0 0.25rem;
+  margin: 0.85rem 0 0.25rem;
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -71,16 +180,18 @@ body {
 .form input {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 3px;
-  padding: 0.45rem 0.55rem;
+  border-radius: var(--radius);
+  padding: 0.55rem 0.65rem;
   font: inherit;
   font-size: 0.9rem;
 }
 
 .form input:focus-visible,
-.download:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.download:focus-visible,
+.send:focus-visible,
+.submit:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
 }
 
 .hint {
@@ -89,20 +200,261 @@ body {
   font-size: 0.8rem;
 }
 
+.error {
+  margin: 1rem 0 0;
+  color: var(--cta-strong);
+  font-size: 0.85rem;
+}
+
+/* One treatment for everything that submits, wherever it is */
+
+.submit,
+.send,
 .download {
-  width: 100%;
+  display: inline-block;
   border: none;
-  border-radius: 3px;
-  background: var(--accent);
-  padding: 0.7rem;
+  border-radius: var(--radius);
+  background: var(--cta);
+  padding: 0.7rem 1.1rem;
   color: var(--paper);
   font: inherit;
+  font-size: 0.9rem;
   font-weight: 600;
+  text-align: center;
+  text-decoration: none;
   cursor: pointer;
 }
 
+.submit:hover,
+.send:hover,
 .download:hover {
-  background: var(--accent-strong);
+  background: var(--cta-strong);
+}
+
+.submit:disabled,
+.send:disabled,
+.download:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Login and sign up */
+
+.login {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 23rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  padding: 2rem;
+  box-shadow: var(--lift);
+}
+
+.login-card .wordmark {
+  margin: 0;
+  color: var(--brand-navy);
+  font-size: 1.4rem;
+}
+
+.login-card h1 {
+  margin: 1.25rem 0 0;
+  color: var(--brand-navy);
+  font-size: 1.15rem;
+}
+
+.login-card .submit {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.auth-switch {
+  margin: 1.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.auth-switch a {
+  color: var(--accent);
+}
+
+/* The library */
+
+.library-body {
+  padding: 2rem;
+}
+
+.draft-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.draft-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  padding: 1.25rem;
+  box-shadow: var(--lift);
+}
+
+.draft-card h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.draft-card h2 a {
+  color: var(--brand-navy);
+  text-decoration: none;
+}
+
+.draft-card h2 a:hover {
+  text-decoration: underline;
+}
+
+.draft-card h2 a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.library-empty {
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.library-empty p {
+  margin: 0 0 1.25rem;
+}
+
+/* Chat */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  padding: 1.25rem;
+  box-shadow: var(--lift);
+}
+
+.transcript {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.transcript li {
+  border-radius: var(--radius);
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.transcript li.assistant {
+  background: var(--ground);
+}
+
+.transcript li.user {
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.transcript .said {
+  white-space: pre-wrap;
+}
+
+.transcript .who {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* A turn takes between 30 seconds and two and a half minutes, which is long
+   enough that a disabled button alone reads as a page that has stopped. */
+.waiting {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.waiting::after {
+  content: "";
+  animation: waiting 1.2s steps(4, end) infinite;
+}
+
+@keyframes waiting {
+  to {
+    content: "....";
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waiting::after {
+    content: "...";
+    animation: none;
+  }
+}
+
+.chat-form label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chat-form input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.chat-form input:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.send {
+  width: 100%;
+  margin-top: 0.75rem;
+}
+
+.document-toolbar {
+  margin: 0 auto 1rem;
+  max-width: 48rem;
+}
+
+.waiting-for-document {
+  margin: 0 auto;
+  max-width: 48rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-lg);
+  color: var(--muted);
+  padding: 3rem 2rem;
+  text-align: center;
 }
 
 /* Document */
@@ -111,10 +463,12 @@ body {
   margin: 0 auto;
   max-width: 48rem;
   border: 1px solid var(--line);
+  border-radius: var(--radius);
   background: var(--paper);
   padding: 3rem 3.5rem;
   font-family: Georgia, "Times New Roman", serif;
   font-size: 0.95rem;
+  box-shadow: var(--lift);
 }
 
 .document h1 {
@@ -138,6 +492,16 @@ body {
 .document .preamble {
   color: var(--muted);
   font-size: 0.85rem;
+}
+
+.document-disclaimer {
+  margin: 1.5rem 0 0;
+  border: 1px solid var(--warn-line);
+  border-radius: var(--radius);
+  background: var(--warn-ground);
+  padding: 0.75rem 1rem;
+  font-family: system-ui, sans-serif;
+  font-size: 0.8rem;
 }
 
 .document .field {
@@ -207,16 +571,6 @@ body {
   margin-bottom: 0.75rem;
 }
 
-.waiting-for-document {
-  border: 1px dashed var(--line);
-  border-radius: 6px;
-  color: var(--muted);
-  margin: 0 auto;
-  max-width: 48rem;
-  padding: 3rem 2rem;
-  text-align: center;
-}
-
 .attribution {
   margin-top: 2rem;
   border-top: 1px solid var(--line);
@@ -233,228 +587,9 @@ body {
   overflow: hidden;
 }
 
-/* Chat */
-
-.chat {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--paper);
-  padding: 1.25rem;
-}
-
-.transcript {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.transcript li {
-  border-radius: 4px;
-  padding: 0.6rem 0.75rem;
-  font-size: 0.9rem;
-}
-
-.transcript li.assistant {
-  background: var(--ground);
-}
-
-.transcript li.user {
-  background: var(--paper);
-  border: 1px solid var(--line);
-}
-
-.transcript .said {
-  white-space: pre-wrap;
-}
-
-.transcript .who {
-  display: block;
-  margin-bottom: 0.15rem;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* A turn takes between 30 seconds and two and a half minutes, which is long
-   enough that a disabled button alone reads as a page that has stopped. */
-.waiting {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.waiting::after {
-  content: "";
-  animation: waiting 1.2s steps(4, end) infinite;
-}
-
-@keyframes waiting {
-  to {
-    content: "....";
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .waiting::after {
-    content: "...";
-    animation: none;
-  }
-}
-
-.chat-form label {
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.chat-form input {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 3px;
-  padding: 0.45rem 0.55rem;
-  font: inherit;
-  font-size: 0.9rem;
-}
-
-.chat-form input:focus-visible,
-.send:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
-
-.send {
-  width: 100%;
-  margin-top: 0.75rem;
-  border: none;
-  border-radius: 3px;
-  background: var(--accent);
-  padding: 0.7rem;
-  color: var(--paper);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.send:hover {
-  background: var(--accent-strong);
-}
-
-.send:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.document-toolbar {
-  margin: 0 auto 1rem;
-  max-width: 48rem;
-}
-
-.document-toolbar .download {
-  width: auto;
-  padding: 0.55rem 1.1rem;
-}
-
-/* Platform chrome */
-
-.session-bar {
-  display: flex;
-  align-items: baseline;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  background: var(--brand-navy);
-  padding: 0.5rem 2rem;
-  color: var(--paper);
-  font-size: 0.85rem;
-}
-
-.session-bar button {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--brand-yellow);
-  font: inherit;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.session-bar button:focus-visible {
-  outline: 2px solid var(--brand-yellow);
-  outline-offset: 2px;
-}
-
-.notice {
-  padding: 3rem 2rem;
-  color: var(--muted);
-}
-
-.notice .error {
-  margin: 0;
-}
-
-/* Login */
-
-.login {
-  display: grid;
-  place-items: center;
-  min-height: 100vh;
-  padding: 2rem;
-}
-
-.login-card {
-  width: 100%;
-  max-width: 22rem;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--paper);
-  padding: 1.75rem;
-}
-
-.login-card h1 {
-  margin: 0;
-  color: var(--brand-navy);
-  font-size: 1.5rem;
-}
-
-.login-card .submit {
-  width: 100%;
-  margin-top: 1.25rem;
-  border: none;
-  border-radius: 3px;
-  background: var(--brand-purple);
-  padding: 0.7rem;
-  color: var(--paper);
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.login-card .submit:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.login-card .submit:focus-visible,
-.login-card input:focus-visible {
-  outline: 2px solid var(--brand-blue);
-  outline-offset: 1px;
-}
-
-.error {
-  margin: 1rem 0 0;
-  color: var(--brand-purple);
-  font-size: 0.85rem;
-}
-
-/* Print: the agreement alone, without the page around it */
+/* Print: the agreement alone, without the page around it. The disclaimer
+   inside the document is deliberately not hidden: the PDF is the copy that
+   leaves the building, so it is the one that most needs to say it is a draft. */
 
 @page {
   margin: 20mm;
@@ -465,7 +600,8 @@ body {
     background: var(--paper);
   }
 
-  .session-bar,
+  .app-bar,
+  .disclaimer-banner,
   .masthead,
   .chat-column,
   .document-toolbar {
@@ -480,7 +616,9 @@ body {
   .document {
     max-width: none;
     border: none;
+    border-radius: 0;
     padding: 0;
+    box-shadow: none;
   }
 
   .document h2 {
@@ -490,7 +628,8 @@ body {
   .clauses li,
   .subclauses li,
   .signatures,
-  .document .field {
+  .document .field,
+  .document-disclaimer {
     break-inside: avoid;
   }
 
@@ -500,6 +639,15 @@ body {
 }
 
 @media (max-width: 60rem) {
+  .app-bar {
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+  }
+
+  .app-bar-session {
+    margin-left: 0;
+  }
+
   .columns {
     grid-template-columns: 1fr;
   }

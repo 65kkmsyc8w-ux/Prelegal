@@ -8,9 +8,9 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-All eleven agreements can be drafted through AI chat. Sign-in is a display name
-and nothing else, and nothing is saved: real authentication and saved documents
-are PL-8.
+All eleven agreements can be drafted through AI chat. Accounts are an email and
+a password, and every conversation that settles on an agreement is saved and can
+be reopened later.
 
 ## Development process
 
@@ -78,8 +78,7 @@ up. The reasoning sits in `globals.css` beside the tokens.
 
 ## Implementation Status
 
-Jira PL-2, PL-3, PL-5, PL-6 and PL-7 are done. PL-8 is not started, so there are
-no saved documents and no real authentication.
+Jira PL-2, PL-3, PL-5, PL-6, PL-7 and PL-8 are done. The V1 build is complete.
 
 ### Completed (PL-2)
 
@@ -144,21 +143,51 @@ no saved documents and no real authentication.
   `templates/` is still read only by the generator and still never enters the
   image.
 
-### Not built yet
+### Completed (PL-8)
 
-- Real authentication and saved documents (PL-8).
+- Accounts are real. Sign up takes an email, a display name and a password and
+  signs you straight in; sign in takes the email and password. Email is the
+  unique key, so a display name is ordinary text and two people may share one.
+- Passwords are hashed with `hashlib.scrypt` from the standard library, at
+  Django's `ScryptPasswordHasher` cost parameters, salted per password. No new
+  dependency and no compiled wheel, which is what the six-package backend and
+  the "never over-engineer" rule both ask for.
+- Sign in answers the same 401 whether the email is unregistered or the password
+  is wrong, so the route cannot be used to find out who has an account. A
+  sign-up race loses with a 409 rather than being handed the winner's account.
+- Every turn that settles on an agreement is saved to a `drafts` row carrying
+  the document, the fields and the whole transcript. `My drafts` lists them and
+  opening one restores both the conversation and the cover page, so the draft
+  can be carried on rather than only read.
+- The chat is no longer stateless, and the transaction discipline that kept it
+  safe is now explicit: see the invariant below.
+- A SaaS shell around every screen: a navy header with the wordmark, primary
+  navigation and the signed-in account, a card based library, and restyled sign
+  in and sign up screens.
+- A disclaimer that the document is a draft and wants legal review, said once in
+  `lib/disclaimer.ts` and rendered twice: a banner in the chrome, and a
+  paragraph inside the agreement so it reaches the printed PDF.
 
 ### Current API endpoints
 
 - `GET /api/health` - health check, used by the start scripts
 - `GET /api/chat/greeting` - the assistant's opening line, no provider call
 - `POST /api/chat/message` - one turn of the conversation, 502 if the model
-  fails, 422 if `fields` are not the shape `document` takes. Carries `document`
-  and `fields`; answers with the document settled on, its declaration, and the
-  merged fields
-- `POST /api/auth/session` - sign in under a display name, sets the session cookie
+  fails, 422 if `fields` are not the shape `document` takes, 404 if `draftId`
+  names no draft the caller owns. Carries `document`, `fields` and `draftId`;
+  answers with the document settled on, its declaration, the merged fields and
+  the draft the turn was saved into
+- `POST /api/auth/signup` - open an account with an email, a display name and a
+  password. 201 and the session cookie, or 409 if the email is taken
+- `POST /api/auth/session` - sign in with the email and password, sets the
+  session cookie. 401 for a wrong password and for an unregistered email alike
 - `POST /api/auth/signout` - clear the session cookie
 - `GET /api/auth/me` - the signed-in user, 401 when there is no session
+- `GET /api/drafts` - the caller's library, most recently worked on first, each
+  card naming its agreement
+- `GET /api/drafts/{id}` - one draft with its declaration, fields and
+  transcript. 404 for a draft that does not exist and for one belonging to
+  someone else alike
 
 ## Invariants
 
@@ -178,6 +207,21 @@ which are documented but not yet pinned.
   database file.*
 - **A session cookie can outlive the account it names**, because the database is
   rebuilt on every start. `current_user` answers 401 for it.
+- **No transaction is open across the OpenRouter call.** Resolving the caller
+  and checking the draft both read, and a SELECT alone opens a transaction that
+  holds SQLite's shared lock. A turn takes 30 to 150 seconds, so `routers/chat.py`
+  commits after those checks and before the provider is asked; without it every
+  other request wanting to commit waits out the busy timeout and fails.
+- **Sign in cannot be used to find out who has an account.** A wrong password
+  and an unregistered email answer with the same 401 and the same message. The
+  loser of a sign-up race is told the email is taken rather than handed the
+  winner's account, which would sign it in with somebody else's password.
+- **A password is stored and compared exactly as typed.** The email is trimmed
+  and lower cased because a stray space is the same account; the password is
+  neither, because trimming on the way in and not on the way back would lock out
+  anyone whose password ends in a space.
+- **A draft answers 404 to anyone but its owner**, on reading and on writing
+  alike, so nothing confirms which draft ids exist.
 - **`merge_fields` reads a missing value as "not mentioned", never as "clear
   it".** A turn that says nothing about a field leaves the value standing. An
   empty string counts as missing too: the model fills fields it knows nothing
@@ -190,9 +234,17 @@ which are documented but not yet pinned.
   naming none, so a hallucinated document costs a turn rather than a 500.
 - **Changing document mid-conversation empties the cover page**, because field
   keys belong to the document they were gathered for.
-- **Fields are read before the provider is called.** A body that is not the
-  shape the document takes is a 422, not a 500, and costs no call. A turn takes
+- **Fields are read, and the draft's owner checked, before the provider is
+  called.** A body that is not the shape the document takes is a 422 and a draft
+  the caller cannot write to is a 404, both before any call is made. A turn takes
   a minute or more and is charged for, so finding out afterwards wastes both.
+- **Nothing is saved until an agreement is settled on.** A front desk exchange
+  that goes nowhere leaves no row, so the library holds drafts rather than
+  abandoned openings. A turn the provider failed leaves nothing behind either.
+- **`save_turn` never merges.** Every turn already carries its whole state, so
+  saving it is a wholesale overwrite and two turns racing on one draft are last
+  write wins by row rather than a torn one. This is why no `BEGIN IMMEDIATE` is
+  needed: there is still no ordered read-modify-write in this schema.
 - **The chat prompt names every clause of every document**, pinned by a test,
   because nothing reads `templates/*.md` at runtime. A second test re-runs the
   generator and fails if the committed output has drifted from the templates.
@@ -204,17 +256,21 @@ which are documented but not yet pinned.
 ```
 documents/      <slug>.spec.json by hand, <slug>.clauses.json generated
 backend/app/    routers -> ai -> domain -> core, dependencies one way only
-  core/         config, engine, session cookie, the auth dependency
-  domain/       models, schemas, the user upsert, the field vocabulary,
+  core/         config, engine, session cookie and password hashing,
+                the auth dependency
+  domain/       models, schemas, accounts, saved drafts, the field vocabulary,
                 the document registry and the merge
   ai/           the provider client, the front desk and drafting prompts
   routers/      one module per resource, all mounted under /api
 frontend/
   scripts/      generate-clauses.mjs, run by npm run generate
-  src/app/      page.tsx (chat beside the document), login/, globals.css
-  src/components/  AuthGate, ChatPanel, DocumentView
+  src/app/      page.tsx (chat beside the document, resumed from ?draft=),
+                login/, signup/, drafts/, globals.css
+  src/components/  AuthGate (the session), AppHeader (the shell),
+                ChatPanel, DocumentView
   src/lib/      api.ts (the one API client), documents.ts (the spec shape),
-                fields.ts (how a field reads once filled)
+                fields.ts (how a field reads once filled),
+                disclaimer.ts (said once, rendered twice)
   src/content/  clause.ts (the generated shape),
                 generated/ (the terms, generated from templates/)
 ```
@@ -253,5 +309,10 @@ passes both `tsc` and vitest and only fails there.
 - **The provider sometimes answers with nothing**, with `finish_reason` "stop"
   rather than a truncation, so a larger token budget does not help. One retry
   does, and a second empty answer surfaces as a 502.
-- **Nothing survives a reload.** The transcript and the draft live in the
-  browser, and the database is rebuilt on every container start.
+- **A reload comes back to the draft, but a restart does not.** The first turn
+  that settles on an agreement puts its id in the address, and the draft is
+  saved, so reloading resumes. The database is still rebuilt on every container
+  start, so accounts and their drafts last only as long as the container.
+- **The conversation before an agreement is settled on is not saved.** Reloading
+  during the opening exchange starts over, because there is no draft yet to save
+  it into.
