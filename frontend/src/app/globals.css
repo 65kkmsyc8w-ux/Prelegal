@@ -8,10 +8,10 @@
   --accent-strong: #163a61;
 
   /* The Prelegal palette, used by the platform chrome around the document.
-     The NDA form and the agreement keep the colours above: Blue Primary
-     behind white Download text is 2.9:1, where the current accent is 8:1.
-     Gray Text #888888 is left out for the same reason: on either background
-     it reads at about 3.4:1, and --muted above already carries small text. */
+     The NDA form and the agreement keep the colours above: white on Blue
+     Primary is 3.06:1, where white on the current accent is 8.4:1, and AA
+     wants 4.5:1. Gray Text #888888 is left out for the same reason, reading
+     3.5:1 on white, and --muted above already carries the small text. */
   --brand-yellow: #ecad0a;
   --brand-blue: #209dd7;
   --brand-purple: #753991;

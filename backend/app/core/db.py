@@ -17,6 +17,11 @@ DATABASE_PATH = DATA_DIR / "prelegal.db"
 def _configure_sqlite(connection, _record):
     cursor = connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
+    # Sign-ins are the only writes, but the end to end suite runs three
+    # engines in parallel against one container and opens several at once.
+    # Without a timeout the loser of a write lock fails immediately rather
+    # than waiting the moment out.
+    cursor.execute("PRAGMA busy_timeout=10000")
     cursor.close()
 
 

@@ -15,6 +15,17 @@ def test_the_login_route_resolves(client):
     assert client.get("/login/").status_code == 200
 
 
+def test_the_login_route_resolves_without_the_trailing_slash(client):
+    """A hard refresh at /login is a directory request the mount answers with a
+    redirect to /login/, rather than the 404 it would give without
+    trailingSlash."""
+    response = client.get("/login", follow_redirects=False)
+
+    assert response.status_code == 307
+    assert response.headers["location"].endswith("/login/")
+    assert client.get("/login").status_code == 200
+
+
 def test_the_api_is_reachable_past_the_catch_all_mount(client):
     """StaticFiles is mounted at / and answers everything. A route registered
     after it would be unreachable, and this is what would catch that."""

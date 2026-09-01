@@ -1,4 +1,8 @@
+from sqlalchemy import select
+
 from app.core.security import SESSION_COOKIE, create_session
+from app.domain.models import User
+from app.domain.users import sign_in
 
 
 def test_signing_in_opens_an_account_and_sets_a_cookie(client):
@@ -77,3 +81,29 @@ def test_me_refuses_a_cookie_naming_an_account_that_is_gone(client):
 def test_signing_out_ends_the_session(signed_in_client):
     assert signed_in_client.post("/api/auth/signout").status_code == 204
     assert signed_in_client.get("/api/auth/me").status_code == 401
+
+
+def test_the_loser_of_a_race_answers_with_the_winners_account(
+    session_factory, monkeypatch
+):
+    """Two requests under one new name both look, both find nothing, and both
+    insert. The unique constraint settles which wins, and the loser has to
+    answer with the winner's row rather than raise. Eight concurrent sign-ins
+    against the container produced one 500 before this. A shared in-memory
+    database cannot race against itself, so the first lookup is staged to miss.
+    """
+    session = session_factory()
+    session.add(User(display_name="Ada"))
+    session.commit()
+    winner_id = session.scalar(select(User).where(User.display_name == "Ada")).id
+
+    real_scalar = session.scalar
+    lookups = {"count": 0}
+
+    def missing_on_the_first_look(*args, **kwargs):
+        lookups["count"] += 1
+        return None if lookups["count"] == 1 else real_scalar(*args, **kwargs)
+
+    monkeypatch.setattr(session, "scalar", missing_on_the_first_look)
+
+    assert sign_in(session, "Ada").id == winner_id
