@@ -7,12 +7,18 @@ $root = Split-Path -Parent $PSScriptRoot
 
 Push-Location $root
 try {
+    if (-not (Select-String -Path .env -Pattern '^OPENROUTER_API_KEY=.' -Quiet -ErrorAction SilentlyContinue)) {
+        Write-Host "OPENROUTER_API_KEY is missing from .env. Copy .env.example and fill it in."
+        exit 1
+    }
+
     docker build -t $image .
     docker rm -f $container 2>$null | Out-Null
 
     # No volume. The database is built inside the container, so removing and
     # recreating it here is what gives every start a database from scratch.
-    docker run -d --name $container -p "${port}:8000" $image | Out-Null
+    docker run -d --name $container -p "${port}:8000" `
+        --env-file .env $image | Out-Null
 
     # docker run -d exits once the container is created, which says nothing
     # about whether it stayed up.

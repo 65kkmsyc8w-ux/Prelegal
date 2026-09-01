@@ -1,3 +1,5 @@
+import type { NdaDetails } from "@/lib/nda";
+
 export interface ApiUser {
   id: number;
   display_name: string;
@@ -43,3 +45,25 @@ export const createSession = (displayName: string) =>
 export const signOut = () => request<void>("/auth/signout", { method: "POST" });
 
 export const me = () => request<ApiUser>("/auth/me");
+
+export interface ChatEntry {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatReply {
+  reply: string;
+  fields: NdaDetails;
+}
+
+export const getGreeting = () => request<{ reply: string }>("/chat/greeting");
+
+export const sendChatMessage = (
+  message: string,
+  history: ChatEntry[],
+  fields: NdaDetails,
+) =>
+  request<ChatReply>("/chat/message", {
+    method: "POST",
+    body: JSON.stringify({ message, history, fields }),
+  });

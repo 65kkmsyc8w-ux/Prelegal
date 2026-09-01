@@ -23,6 +23,14 @@ When instructed to build a feature:
 
 When writing code to make calls to LLMs, use your Cerebras skill to use LiteLLM via OpenRouter to the `nvidia/nemotron-3.5-lightning:free` model with Cerebras as the inference provider. You should use Structured Outputs so that you can interpret the results and populate fields in the legal document.
 
+Two facts about that pairing, established by calling the API rather than by
+reading docs. OpenRouter serves this model from Nvidia whatever provider order
+is asked for, so the Cerebras preference is sent and does not bind. And litellm
+refuses the skill's `reasoning_effort` argument for this model, so the reasoning
+setting travels in `extra_body` instead; without it the answer comes back empty.
+`backend/AGENTS.md` records both, along with the empty-answer retry they made
+necessary.
+
 There is an OPENROUTER_API_KEY in the .env file in the project root.
 
 ## Technical design
@@ -92,14 +100,30 @@ authentication in the codebase yet.
 - Start and stop scripts for Mac, Linux and Windows.
 - Product features are unchanged. NDA drafting is still entirely client-side.
 
+### Completed (PL-6)
+
+- The form is gone. A freeform chat with an assistant gathers the cover page,
+  and the agreement builds beside the conversation as it goes.
+- LiteLLM through OpenRouter, with Structured Outputs: one call per turn returns
+  the assistant's next message and whatever it took from the last one.
+- `POST /api/chat/message` is stateless. The browser holds the transcript and
+  the fields and sends both, so nothing is stored and nothing is lost but a
+  reload.
+- `merge_fields` lays what the assistant found over what was already known, so a
+  turn that says nothing about a field leaves it standing.
+- The container now needs `OPENROUTER_API_KEY` to start, and the start scripts
+  pass `.env` in and refuse to build without it.
+
 ### Not built yet
 
-- AI chat (PL-6), the other ten document types (PL-7), real authentication and
-  saved documents (PL-8).
+- The other ten document types (PL-7), real authentication and saved documents
+  (PL-8).
 
 ### Current API endpoints
 
 - `GET /api/health` - health check, used by the start scripts
+- `GET /api/chat/greeting` - the assistant's opening line, no provider call
+- `POST /api/chat/message` - one turn of the conversation, 502 if the model fails
 - `POST /api/auth/session` - sign in under a display name, sets the session cookie
 - `POST /api/auth/signout` - clear the session cookie
 - `GET /api/auth/me` - the signed-in user, 401 when there is no session
@@ -118,5 +142,9 @@ Each of these has a regression test behind it.
   offset puts the database inside the app package.
 - **A session cookie can outlive the account it names**, because the database is
   rebuilt on every start. `current_user` answers 401 for it.
+- **`merge_fields` reads None as "not mentioned", never as "clear it".** A turn
+  that says nothing about a field leaves the value standing.
+- **The chat prompt names all eleven clauses**, pinned by a test, because
+  nothing reads `templates/mutual-nda.md` at runtime.
 - **Frontend test contract.** The suites assert on accessible names, roles and
   text, never `data-testid`. Check before any restyle.

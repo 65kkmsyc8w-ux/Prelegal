@@ -8,15 +8,18 @@ the app and these tests run in Docker.
 Four packages, and the dependencies only point one way:
 
 ```
-routers -> domain -> core
+routers -> ai -> domain -> core
 ```
 
 `core` holds config, the engine, the session cookie and the auth dependency.
-`domain` holds the models, the schemas and the mutations. `routers` holds one
-module per resource, each mounted under `/api`.
+`domain` holds the models, the schemas, the mutations and the document shape.
+`ai` holds the provider client and the chat prompt. `routers` holds one module
+per resource, each mounted under `/api`.
 
-PL-6 adds an `ai/` package between `routers` and `domain`. It is not here yet
-because nothing calls a model provider.
+`domain/nda.py` holds both shapes of the cover page and the merge, and knows
+nothing about the assistant. That is what keeps the arrow pointing one way: the
+merge is document logic, so `ai` depends on it rather than owning it, and
+`domain` never imports from `ai`.
 
 ## Invariants
 
@@ -35,6 +38,15 @@ Each has a test behind it.
   signature alone.
 - **The name on a session is stripped before it is validated**, so a name of
   nothing but spaces is a 422 rather than an account with a blank name.
+- **`merge_fields` reads None as "the message did not mention it"**, never as
+  "clear it". A turn that says nothing about a field leaves it standing. The
+  model is asked to leave untouched fields null but often echoes them back
+  instead, and both answers have to come out the same.
+- **The chat stores nothing.** The browser holds the transcript and the fields
+  and sends both, so no transaction is open across the provider call.
+- **`test_chat_prompt.py` pins the eleven clause headings.** Nothing reads
+  `templates/mutual-nda.md` at runtime and it is not copied into the image, so
+  that test is what keeps the transcription in `ai/chat.py` honest.
 
 ## Deliberately absent
 
@@ -47,9 +59,28 @@ Do not add these back without a reason that exists in the code.
   adds rows whose order matters.
 - **No password hashing.** PL-5 is a fake login by instruction. PL-8 adds real
   authentication, and `core/security.py` is where it goes.
-- **No `OPENROUTER_API_KEY` check in the lifespan.** Nothing calls the provider
-  yet, and refusing to boot over an unused variable would be a lie about what
-  the container needs.
+- **No chat persistence.** PL-8 adds saved documents; until then a reload starts
+  a new conversation, and the container holds nothing to lose.
+
+## What the provider actually does
+
+Measured against OpenRouter, not assumed. All three of these cost a working
+build before they were understood.
+
+- **The configured model is served by Nvidia, not Cerebras.** `EXTRA_BODY` asks
+  for Cerebras first, per the project's Cerebras skill, and OpenRouter treats
+  the order as a preference rather than a requirement.
+- **Reasoning goes through `extra_body`, not litellm's `reasoning_effort`.**
+  litellm refuses that argument for this model, and the call never leaves the
+  process. Sent through `extra_body` it reaches OpenRouter untouched. It is not
+  optional: without it the reasoning runs to the token limit and the answer
+  comes back empty.
+- **An empty answer is a normal outcome.** The provider returns a message with
+  no content and `finish_reason` "stop" often enough to see it in a handful of
+  calls. It is not truncation, so a larger budget does not prevent it, and the
+  same request succeeds on the next attempt. `ATTEMPTS` is why.
+- **Turns take 30 to 150 seconds.** The free model is slow. `TIMEOUT` allows
+  for it.
 
 ## Commands
 
