@@ -1,6 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 3000;
+// The app is one container: FastAPI serves the API and the built export from a
+// single origin, so the suite runs against a running container rather than
+// against next dev, which has no backend behind it.
+const BASE_URL = process.env.E2E_BASE_URL ?? "http://localhost:4000";
 
 export default defineConfig({
   testDir: "./e2e",
@@ -8,7 +11,7 @@ export default defineConfig({
   fullyParallel: true,
   reporter: process.env.CI ? "list" : [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: `http://localhost:${PORT}`,
+    baseURL: BASE_URL,
     trace: "on-first-retry",
   },
   // The print stylesheet is the least portable part of this app, so it is
@@ -19,10 +22,4 @@ export default defineConfig({
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
   ],
-  webServer: {
-    command: `npx next dev --port ${PORT}`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
 });

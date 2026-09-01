@@ -1,8 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-import { A_DRAFT, fillDraft } from "./support";
+import { A_DRAFT, fillDraft, signIn } from "./support";
 
 test.beforeEach(async ({ page }) => {
+  await signIn(page);
   await page.goto("/");
 });
 
@@ -78,6 +79,7 @@ test.describe("printing", () => {
   test("prints the agreement without the form or the page chrome", async ({ page }) => {
     await expect(page.locator(".form-column")).toBeHidden();
     await expect(page.locator(".masthead")).toBeHidden();
+    await expect(page.locator(".session-bar")).toBeHidden();
     await expect(page.getByRole("article")).toBeVisible();
   });
 

@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
+import { AuthGate } from "@/components/AuthGate";
 import { NdaDocument } from "@/components/NdaDocument";
 import { NdaForm } from "@/components/NdaForm";
 import { emptyNda } from "@/lib/nda";
 
-const Home = () => {
+export const Home = () => {
   const [details, setDetails] = useState(emptyNda);
 
   return (
@@ -35,4 +36,10 @@ const Home = () => {
   );
 };
 
-export default Home;
+const Page = () => (
+  <AuthGate>
+    <Home />
+  </AuthGate>
+);
+
+export default Page;
